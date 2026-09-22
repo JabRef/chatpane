@@ -9,6 +9,12 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-09-23* — **Release pipeline to Maven Central (MADR 0012).**
+Carl: "I want to release this control to maven repo, therefor i need github workflows. Salvage from JabRef/html-to-node what you need"; chose SemVer over CalVer, and release + snapshots + dependabot + automerge.
+`:chatpane` publishes as `org.jabref:chatpane` with the vanniktech plugin; `release.yml` (on `v*` tags, checks tag = `chatpaneVersion`), `publish.yml` (snapshots of `main` and PRs), `dependabot.yml`, `automerge.yml` taken over from html-to-node.
+The changelog moved to *Unreleased* (heylogs `versioning=semver`); MADR 0003 is superseded in its versioning.
+Blocked on maintainers: the `KOPPOR_SIGNING_*` and `KOPPOR_MAVENCENTRAL*` repository secrets, and "Allow auto-merge" in the repository settings.
+
 *2026-09-22 (5)* — **Conventions moved to `AGENTS.md`.**
 Carl: "do it with a CLAUDE.md stub importing AGENTS.md".
 Merged the open `rename-claude-to-agents` branch; `CLAUDE.md` is now one line, `@AGENTS.md`, so Claude Code still loads the conventions and other agents read them directly.
@@ -125,4 +131,4 @@ Consequence for JabRef: once M1 lands, `AiChatView` could replace `ListScrollPan
 - [ ] Avatars / per-sender colors as data (MADR 0007 exception)
 - [ ] Date separators, unread marker
 - [ ] Accessibility (roles, texts for screen readers)
-- [ ] Publishing: Maven Central coordinates, POM without JavaFX classifiers, SemVer question (MADR 0003)
+- [x] Publishing: Maven Central coordinates, POM without JavaFX classifiers, SemVer (MADR 0012) — first release once the secrets are set

@@ -1,0 +1,56 @@
+name: Release to Maven Central
+
+# A release is a pushed `v<semver>` tag on main (MADR 0012).
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository == 'JabRef/chatpane'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          show-progress: 'false'
+      - name: Setup JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: temurin
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+      # Central releases are immutable: a tag that disagrees with the built version must fail
+      # before anything is uploaded, not publish the wrong number
+      - name: Check the version matches the tag
+        run: |
+          version=$(sed -n 's/^chatpaneVersion=//p' gradle.properties)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match chatpaneVersion=$version in gradle.properties - refusing to release."
+            exit 1
+          fi
+      - name: Decode secretKeyRingFile
+        id: secring
+        uses: timheuer/base64-to-file@v2
+        with:
+          fileName: 'secring.gpg'
+          encodedString: ${{ secrets.KOPPOR_SIGNING_SECRETKEYRINGFILE_BASE64 }}
+      - name: Store secrets
+        run: |
+          cat >> gradle.properties <<EOF
+          signing.keyId=${{ secrets.KOPPOR_SIGNING_KEYID }}
+          signing.password=${{ secrets.KOPPOR_SIGNING_PASSWORD }}
+          signing.secretKeyRingFile=${{ steps.secring.outputs.filePath }}
+          mavenCentralUsername=${{ secrets.KOPPOR_MAVENCENTRALUSERNAME }}
+          mavenCentralPassword=${{ secrets.KOPPOR_MAVENCENTRALPASSWORD }}
+          EOF
+      - name: Publish and release
+        run: ./gradlew :chatpane:publishAndReleaseToMavenCentral

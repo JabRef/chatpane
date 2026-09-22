@@ -24,6 +24,23 @@ Vibecoded with 🤖 Claude Opus 5.
 `IRC` and `MODERN` render with JavaFX's `RichTextArea`, which is still an **incubator** module (`jfx.incubator.richtext`, [MADR 0010](docs/decisions/0010-richtextarea-transcript-for-irc-and-modern.md)): its API may change between JavaFX releases, and it prints an incubator warning at startup.
 The library requires it, so a modular application gets it resolved automatically; on the class path the jar just has to be there (it is a dependency of the library).
 
+## Installation
+
+Maven coordinates `org.jabref:chatpane` ([MADR 0012](docs/decisions/0012-semver-releases-to-maven-central.md)).
+No release is out yet; every push to `main` publishes `0.1.0-SNAPSHOT` to Maven Central's snapshot repository:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
+}
+dependencies {
+    implementation("org.jabref:chatpane:0.1.0-SNAPSHOT")
+}
+```
+
+JavaFX comes in as an ordinary dependency without platform classifier; pick the platform jars the way the application already does for JavaFX itself.
+
 ## Usage
 
 ```java
@@ -128,7 +145,7 @@ gradlew uiTest                    # TestFX UI tests, need a display (just uitest
 * [docs/requirements/](docs/requirements/README.md) — features, requirements and designs, traced to code with OpenFastTrace
 * [docs/decisions/](docs/decisions/README.md) — architectural decision records (MADR)
 * [docs/workarounds.md](docs/workarounds.md) — workarounds for upstream issues, and when each can go
-* [CHANGELOG.md](CHANGELOG.md) — user-visible changes by date
+* [CHANGELOG.md](CHANGELOG.md) — user-visible changes by release
 
 ## License
 

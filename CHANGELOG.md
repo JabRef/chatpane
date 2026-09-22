@@ -3,10 +3,10 @@
 All notable changes to ChatPane are documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versions are release dates ([CalVer](https://calver.org/), `YYYY-MM-DD`), tagged `v<date>` on GitHub once the day is over.
-The topmost section is the day in progress — its link points at `main` until that tag exists.
+The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html); each release is tagged `v<version>` and published to Maven Central as `org.jabref:chatpane`.
+Changes not yet released collect under *Unreleased*.
 
-## [2026-09-22] - 2026-09-22
+## [Unreleased]
 
 ### Added
 
@@ -27,6 +27,7 @@ The topmost section is the day in progress — its link points at `main` until t
 - **Demo: a pretend assistant** answers each message the way an AI chat does, with *Delete* and *Retry*.
 - **Localizable texts**: `ChatPane.setTextLocalizer(…)` translates the pane's own texts (the context menu's *Copy* and *Select All*); JabRef can pass `Localization::lang`.
 - **Time format as a pane property**: `ChatPane.timeFormatterProperty()` sets how times read, in every layout alike.
+- **Maven coordinates** `org.jabref:chatpane`: every push to `main` publishes a `-SNAPSHOT` to Maven Central's snapshot repository (`https://central.sonatype.com/repository/maven-snapshots/`).
 
 ### Changed
 
@@ -43,4 +44,4 @@ The topmost section is the day in progress — its link points at `main` until t
 - **Bubble text behaves like the transcript**: a bubble's body is a read-only rich-text area now, with the same selection, context menu, styles and links as IRC and modern.
 - **Bubbles keep your selection**: a new message no longer scrolls the bubble layout away while you have text selected in it, as IRC and modern already did.
 
-[2026-09-22]: https://github.com/calixtus/chatpane/commits/main
+[Unreleased]: https://github.com/JabRef/chatpane/commits/main

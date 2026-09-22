@@ -1,0 +1,73 @@
+name: Publish snapshot to Maven Central
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Fork PRs get no secrets, so they can never publish - don't even start the job for them
+    if: github.repository == 'JabRef/chatpane' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          show-progress: 'false'
+          # Publish the branch as-is, not GitHub's main-merged ref, and keep enough
+          # history for the is-up-to-date check below
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Skip if branch is behind main
+        id: uptodate
+        # A stale branch would publish a snapshot missing commits that are already on
+        # main, silently downgrading the artifact for everyone consuming it
+        run: |
+          git fetch --no-tags origin main
+          if [ "${{ github.event_name }}" = "pull_request" ] && ! git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            echo "Branch is behind main - merge main before a snapshot is published."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Setup JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: temurin
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Decode secretKeyRingFile
+        id: secring
+        uses: timheuer/base64-to-file@v2
+        with:
+          fileName: 'secring.gpg'
+          encodedString: ${{ secrets.KOPPOR_SIGNING_SECRETKEYRINGFILE_BASE64 }}
+      - name: Store secrets
+        run: |
+          cat >> gradle.properties <<EOF
+          signing.keyId=${{ secrets.KOPPOR_SIGNING_KEYID }}
+          signing.password=${{ secrets.KOPPOR_SIGNING_PASSWORD }}
+          signing.secretKeyRingFile=${{ steps.secring.outputs.filePath }}
+          mavenCentralUsername=${{ secrets.KOPPOR_MAVENCENTRALUSERNAME }}
+          mavenCentralPassword=${{ secrets.KOPPOR_MAVENCENTRALPASSWORD }}
+          EOF
+      - name: Publish snapshot
+        if: steps.uptodate.outputs.skip != 'true'
+        # Release versions are published by release.yml on tag push; this workflow only
+        # handles the rolling snapshot
+        run: |
+          if ! grep -q '^chatpaneVersion=.*-SNAPSHOT$' gradle.properties; then
+            echo "Version is not a SNAPSHOT - skipping (releases go through release.yml)."
+            exit 0
+          fi
+          ./gradlew ${PR_NUMBER:+-PversionSuffix=PR$PR_NUMBER} :chatpane:publishAllPublicationsToMavenCentralRepository
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}

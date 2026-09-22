@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by [MADR 0012](0012-semver-releases-to-maven-central.md)
 date: 2026-09-22
 decision-makers: Carl Christian Snethlage
 ---
