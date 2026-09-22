@@ -1,0 +1,218 @@
+/*
+ * User-agent stylesheet of ChatPane (MADR 0007): layout and structure only.
+ *
+ * No palette of its own. Colors come from the standard Modena lookups every
+ * JavaFX theme provides (-fx-accent, -fx-base, -fx-background,
+ * -fx-control-inner-background, -fx-text-background-color,
+ * -fx-text-inner-color), used the way Modena uses
+ * them: a bubble sets -fx-background and its labels take
+ * -fx-text-background-color, which Modena "ladders" against that background
+ * for readable text. So the pane looks native in whatever theme the
+ * application runs, and an application restyles it with ordinary selectors
+ * on the hooks documented in the README ("CSS reference").
+ *
+ * Traced (dsn~chatpane-stylesheet~5) at ChatPane#getUserAgentStylesheet:
+ * OpenFastTrace does not scan .css files (Workaround W4, docs/workarounds.md).
+ */
+
+/* A chat row is not a pickable item: no selection bar, no zebra rows. */
+.chat-pane .message-cell,
+.chat-pane .message-cell:odd,
+.chat-pane .message-cell:selected,
+.chat-pane .message-cell:focused {
+    -fx-background: -fx-control-inner-background;
+    -fx-background-color: -fx-background;
+    -fx-padding: 0.5em 0.833em 0 0.833em;
+}
+
+.chat-pane .message-cell:continued {
+    -fx-padding: 0.083em 0.833em 0 0.833em;
+}
+
+/*
+ * The body of a bubble is a read-only RichTextArea (BubbleText): selection,
+ * Copy and the context menu come with it. Flattened into text on the
+ * bubble: no border, no focus ring, no padding; as tall as its text. Its
+ * width is BubbleText's measurement (Workaround W5, docs/workarounds.md).
+ */
+.chat-pane .message-bubble .message-body,
+.chat-pane .message-bubble .message-body:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+    -fx-content-padding: 0;
+}
+
+/* Bubble text ladders against the bubble's -fx-background, like a label. */
+.chat-pane .message-bubble .message-text {
+    -fx-fill: -fx-text-background-color;
+}
+
+.chat-pane .message-cell .message-sender {
+    -fx-text-fill: -fx-accent;
+    -fx-font-weight: bold;
+}
+
+/*
+ * Times are the text color, dimmed — not Modena's -fx-mid-text-color, which
+ * is a fixed dark gray and unreadable in a dark theme.
+ */
+.chat-pane .message-cell .message-time {
+    -fx-text-fill: -fx-text-background-color;
+    -fx-opacity: 0.7;
+    -fx-font-size: 0.85em;
+}
+
+/*
+ * irc, modern: the transcript, one read-only RichTextArea (MADR 0010).
+ * Wrapping, caret and paragraph highlight are set in code, not here: a CSS
+ * pass that sets them again breaks the area (Workaround W6). The segments
+ * are Text nodes: they take -fx-fill, not -fx-text-fill.
+ */
+.chat-pane .chat-pane-transcript {
+    -fx-content-padding: 0.25em 0.833em 0.5em 0.833em;
+}
+
+/*
+ * The style probe (Workaround W7): every lookup the text is drawn with, and
+ * the text font, so that any change of them — a theme switch — changes the
+ * probe, and the skin redraws the text areas, which resolve styles only once.
+ */
+.chat-pane .style-probe {
+    -fx-background-color: -fx-accent, -fx-base, -fx-background, -fx-control-inner-background,
+        -fx-text-background-color, -fx-text-inner-color;
+}
+
+/*
+ * Workaround W3 (docs/workarounds.md): a segment with style names is a
+ * Text that does not take the area's -fx-text-fill (Modena sets it to
+ * -fx-text-inner-color); it stays black, unreadable in a dark theme.
+ * Removable when a styled segment in a dark theme reads light without this rule.
+ */
+.chat-pane .chat-pane-transcript .message-text {
+    -fx-fill: -fx-text-inner-color;
+}
+
+.chat-pane .chat-pane-transcript .message-sender {
+    -fx-fill: -fx-accent;
+    -fx-font-weight: bold;
+}
+
+.chat-pane .chat-pane-transcript .message-time {
+    -fx-fill: -fx-text-inner-color;
+    -fx-opacity: 0.7;
+}
+
+/* bubbles */
+.chat-pane .message-bubble {
+    -fx-background: -fx-base;
+    -fx-background-color: -fx-background;
+    -fx-background-radius: 0.833em;
+    -fx-padding: 0.5em 0.833em 0.333em 0.833em;
+    -fx-spacing: 0.167em;
+}
+
+.chat-pane .message-cell:outgoing .message-bubble {
+    -fx-background: -fx-accent;
+}
+
+/*
+ * Selection inside a bubble must contrast with the bubble, not with the
+ * row: Modena's highlight is a light accent — close to the outgoing bubble's
+ * own color. Incoming bubbles select in the accent color; outgoing ones in
+ * the laddered text color, half transparent over the accent.
+ */
+.chat-pane .message-bubble .message-body .selection-highlight {
+    -fx-fill: -fx-accent;
+    -fx-opacity: 0.45;
+}
+
+.chat-pane .message-cell:outgoing .message-bubble .message-body .selection-highlight {
+    -fx-fill: -fx-text-background-color;
+    -fx-opacity: 0.45;
+}
+
+/*
+ * Rendered text (MessageRenderer): line kinds and span styles, the same in
+ * the transcript and in bubbles. Sizes in em, colors only from lookups.
+ */
+.chat-pane .span-bold,
+.chat-pane .line-heading {
+    -fx-font-weight: bold;
+}
+
+.chat-pane .span-italic {
+    -fx-font-style: italic;
+}
+
+.chat-pane .span-code,
+.chat-pane .line-code-block {
+    -fx-font-family: monospace;
+}
+
+.chat-pane .span-strikethrough {
+    -fx-strikethrough: true;
+}
+
+.chat-pane .line-heading-1 {
+    -fx-font-size: 1.4em;
+}
+
+.chat-pane .line-heading-2 {
+    -fx-font-size: 1.2em;
+}
+
+.chat-pane .line-heading-3 {
+    -fx-font-size: 1.1em;
+}
+
+.chat-pane .line-quote {
+    -fx-font-style: italic;
+    -fx-opacity: 0.8;
+}
+
+/* Links: the accent, underlined — except on an outgoing bubble, which is the accent. */
+.chat-pane .chat-pane-transcript .span-link,
+.chat-pane .message-bubble .span-link {
+    -fx-fill: -fx-accent;
+    -fx-underline: true;
+}
+
+.chat-pane .message-cell:outgoing .message-bubble .span-link {
+    -fx-fill: -fx-text-background-color;
+}
+
+/*
+ * Status. Modena has no error color among its lookups, and inventing one
+ * would be a palette of our own (MADR 0007): the pane marks the states
+ * without color — pending dimmed and italic, an error with a dashed outline
+ * in the text color — and an application colors them if it wants, e.g.
+ * .chat-pane .message-cell:error .message-bubble { -fx-background: … }.
+ */
+.chat-pane .message-cell:pending .message-bubble {
+    -fx-opacity: 0.6;
+}
+
+.chat-pane .message-cell:error .message-bubble {
+    -fx-border-color: -fx-text-background-color;
+    -fx-border-style: segments(0.333em, 0.25em);
+    -fx-border-radius: 0.833em;
+    -fx-border-width: 1;
+}
+
+.chat-pane .pending,
+.chat-pane .error {
+    -fx-font-style: italic;
+}
+
+/* Message actions next to a bubble: small, quiet buttons of the theme. */
+.chat-pane .message-actions {
+    -fx-spacing: 0.25em;
+    -fx-padding: 0 0.333em;
+}
+
+.chat-pane .message-action {
+    -fx-font-size: 0.85em;
+    -fx-padding: 0.167em 0.5em;
+}

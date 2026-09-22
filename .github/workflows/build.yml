@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push supersedes the running build: a burst of pushes to main
+# otherwise runs every intermediate commit to completion.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, test, and trace requirements
+        run: ./gradlew build traceRequirements
+
+      - name: Consistency checks
+        run: bash scripts/consistency.sh
+
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: jbangdev/setup-jbang@v0.1.1
+
+      - name: Check the changelog format
+        run: |
+          jbang trust add https://github.com/nbbrd/
+          jbang heylogs@nbbrd check --format=github-actions CHANGELOG.md
+
+  # TestFX UI tests under Xvfb (MADR 0008), same screen geometry as `just uitest`.
+  ui-test:
+    runs-on: ubuntu-latest
+    # A healthy run takes a minute; a wedged one otherwise holds the runner for six hours.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run UI tests
+        run: xvfb-run -a -s "-screen 0 1920x1200x24" ./gradlew uiTest

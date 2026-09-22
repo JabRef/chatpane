@@ -1,0 +1,27 @@
+# Versions of every dependency: the module build files and build-logic's convention plugin
+# (which reads it through `versionCatalogs`) both take them from here.
+
+[versions]
+javafx = "26.0.2"
+jspecify = "1.0.1"
+slf4j = "2.0.17"
+tinylog = "2.8.0"
+commonmark = "0.27.0"
+junit = "6.1.3"
+assertj = "3.27.7"
+testfx = "0.2.0"
+
+[libraries]
+javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }
+commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-strikethrough = { module = "org.commonmark:commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+jfx-incubator-richtext = { module = "org.openjfx:jfx-incubator-richtext", version.ref = "javafx" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-tinylog = { module = "org.tinylog:slf4j-tinylog", version.ref = "tinylog" }
+tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+testfx-junit = { module = "io.gitlab.fx-labs:testfx-junit", version.ref = "testfx" }

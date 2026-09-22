@@ -1,0 +1,17 @@
+# LF everywhere, as .editorconfig says — also on Windows checkouts with core.autocrlf.
+* text=auto eol=lf
+
+# PLAN.md and CHANGELOG.md are append-heavy: concurrent Claude sessions each
+# add a dated entry on top (session protocol in AGENTS.md). Union-merge keeps
+# both sides' added lines instead of raising a conflict. Trade-off: two edits
+# to the *same* line merge to two lines with no conflict marker — rare, given
+# one sentence per line — so glance at the top of the file after a noisy
+# merge. Deliberately NOT applied to docs/requirements/*: a colliding spec-item
+# bump there should conflict so it is noticed (traceRequirements also catches it).
+PLAN.md merge=union
+CHANGELOG.md merge=union
+
+# cmd needs CRLF in batch files.
+*.bat text eol=crlf
+*.jar binary
+*.png binary

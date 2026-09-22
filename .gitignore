@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+bin/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# JVM crash dumps
+hs_err_pid*.log
+replay_pid*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+.claude/worktrees/
