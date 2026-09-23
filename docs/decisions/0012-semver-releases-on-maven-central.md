@@ -9,7 +9,7 @@ decision-makers: Oliver Kopp
 ## Context and Problem Statement
 
 JabRef, the first planned consumer, resolves its libraries from Maven Central and its snapshot repository.
-MADR 0003 chose CalVer day sections while nothing was published and named the first Maven Central release as the moment to revisit that.
+MADR 0003 chose [CalVer](https://calver.org/) day sections while nothing was published and named the first Maven Central release as the moment to revisit that.
 How do we publish the library, and which version numbers does it get?
 
 ## Considered Options
