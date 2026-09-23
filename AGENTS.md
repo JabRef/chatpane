@@ -12,11 +12,11 @@
 * Build: `gradlew build traceRequirements` must be green before every commit.
   `gradlew uiTest` (needs a display; `just uitest` under Xvfb) when touching the skin, a cell or `chatpane.css`.
 * Git: one worktree per task (workspace `CLAUDE.md`); integrate `main` with a merge, and when the push is rejected, `git pull --no-rebase` — **never rebase** (MADR 0004).
-* Changelog: `CHANGELOG.md` in Keep a Changelog format, CalVer date sections (MADR 0003).
-  Every push to `main` that changes user-visible behavior (API, look, demo) adds a bullet under **today's** section (create it if the last section is an older day).
-  Today's section links to `.../compare/v<previous date>...main`; when a new day starts, retag the finished day — push `main` first (pull/merge if rejected), *then* `git tag v<that date> <last commit of that day> && git push origin v<that date>` — and rewrite its link to `.../compare/v<day before>...v<that date>`.
-  Tagging before the push can land the tag on a commit a concurrent session's push then diverges from.
+* Changelog: `CHANGELOG.md` in Keep a Changelog format, SemVer (MADR 0012).
+  Every change to user-visible behavior (API, look, demo) adds a bullet under `## [Unreleased]`.
   Verify before committing: `jbang heylogs@nbbrd check CHANGELOG.md` (rules in `heylogs.properties`); CI runs the same check.
+* Releases (MADR 0012): `main` carries the next version as `X.Y.Z-SNAPSHOT` (`chatpane/build.gradle.kts`), published to the Maven Central snapshot repository on every push, a pull request as `X.Y.Z-PR<n>-SNAPSHOT`.
+  To release: one commit drops `-SNAPSHOT` and renames `[Unreleased]` to `[X.Y.Z] - <date>` (with a fresh empty `[Unreleased]` on top); tag it `vX.Y.Z` and push the tag — `release.yml` publishes it; then bump to the next `-SNAPSHOT`.
 * Requirements: OpenFastTrace in `docs/requirements/` (MADR 0001) — chain `feat → req → dsn → [impl->dsn~…~1]`/`[utest->dsn~…~1]` tags in code.
   A `dsn` item gains `Needs: impl` (and `utest` where sensible) in the same commit as the covering code.
   New behavior = new/updated spec item + tags in the same commit; bump the revision on semantic change and update every tag.

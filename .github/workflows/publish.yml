@@ -63,8 +63,12 @@ jobs:
       - name: Publish snapshot
         if: steps.uptodate.outputs.skip != 'true'
         # Release versions are published by release.yml on tag push; this workflow only
-        # handles the rolling snapshot (main-SNAPSHOT, or pr<n>-SNAPSHOT so a pull request
-        # does not clobber the one built from main)
-        run: ./gradlew ${PR_NUMBER:+-Pversion=pr$PR_NUMBER-SNAPSHOT} :chatpane:publishAllPublicationsToMavenCentralRepository
+        # handles the rolling snapshot
+        run: |
+          if ! grep -q '^version = .*SNAPSHOT' chatpane/build.gradle.kts; then
+            echo "Version is not a SNAPSHOT - skipping (releases go through release.yml)."
+            exit 0
+          fi
+          ./gradlew ${PR_NUMBER:+-PversionSuffix=PR$PR_NUMBER} :chatpane:publishAllPublicationsToMavenCentralRepository
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}

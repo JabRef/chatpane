@@ -106,23 +106,21 @@ Example — green outgoing bubbles, IRC layout by default:
 
 ## Getting it
 
-Releases are on [Maven Central](https://central.sonatype.com/artifact/org.jabref/chatpane), one per day with changes, versioned by date (`2026.09.22`, see [CHANGELOG.md](CHANGELOG.md)):
-
-```kotlin
-dependencies {
-    implementation("org.jabref:chatpane:2026.09.22")
-}
-```
-
-Every push to `main` publishes `main-SNAPSHOT` to the [Maven Central snapshot repository](https://central.sonatype.com/repository/maven-snapshots/):
+Releases will be on [Maven Central](https://central.sonatype.com/artifact/org.jabref/chatpane), versioned by [SemVer](https://semver.org/) — none yet.
+Every push to `main` publishes the next version as a snapshot, `0.1.0-SNAPSHOT`, to the [Maven Central snapshot repository](https://central.sonatype.com/repository/maven-snapshots/):
 
 ```kotlin
 repositories {
     maven("https://central.sonatype.com/repository/maven-snapshots/")
 }
+
+dependencies {
+    implementation("org.jabref:chatpane:0.1.0-SNAPSHOT")
+}
 ```
 
-`gradlew :chatpane:publishToMavenLocal` installs `main-SNAPSHOT` into the local Maven repository instead.
+A pull request publishes its own snapshot, `0.1.0-PR<n>-SNAPSHOT`, for testing it in the consuming application.
+`gradlew :chatpane:publishToMavenLocal` installs `0.1.0-SNAPSHOT` into the local Maven repository instead.
 The library does not pick JavaFX's platform jars; the application does, as for any JavaFX library.
 
 ## Demo

@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
+// SemVer (MADR 0012). -PversionSuffix=PR17 turns 0.1.0-SNAPSHOT into 0.1.0-PR17-SNAPSHOT, so a
+// pull request snapshot is identifiable and does not clobber the one built from main.
+version = "0.1.0" + (findProperty("versionSuffix")?.let { "-$it" } ?: "") + "-SNAPSHOT"
+
 dependencies {
     api(libs.javafx.controls)
     // IRC and MODERN render as one RichTextArea document (MADR 0010). Incubator

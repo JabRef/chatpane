@@ -3,7 +3,7 @@ name: Release to Maven Central
 on:
   push:
     tags:
-      - 'v[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+      - 'v*'
 
 permissions:
   contents: read
@@ -43,8 +43,11 @@ jobs:
           mavenCentralUsername=${{ secrets.KOPPOR_MAVENCENTRALUSERNAME }}
           mavenCentralPassword=${{ secrets.KOPPOR_MAVENCENTRALPASSWORD }}
           EOF
-      - name: Publish and release
-        # CalVer (MADR 0012): tag v2026-09-22 releases version 2026.09.22
+      - name: Guard against SNAPSHOT releases
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          ./gradlew -Pversion="${version//-/.}" :chatpane:publishAndReleaseToMavenCentral
+          if grep -q '^version = .*SNAPSHOT' chatpane/build.gradle.kts; then
+            echo "Tagged commit still has a SNAPSHOT version - refusing to release."
+            exit 1
+          fi
+      - name: Publish and release
+        run: ./gradlew :chatpane:publishAndReleaseToMavenCentral
