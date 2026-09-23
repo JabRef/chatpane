@@ -104,6 +104,27 @@ Example — green outgoing bubbles, IRC layout by default:
 .chat-pane .message-cell:outgoing .message-bubble { -fx-background: #2e7d32; }
 ```
 
+## Getting it
+
+Releases are on [Maven Central](https://central.sonatype.com/artifact/org.jabref/chatpane), one per day with changes, versioned by date (`2026.09.22`, see [CHANGELOG.md](CHANGELOG.md)):
+
+```kotlin
+dependencies {
+    implementation("org.jabref:chatpane:2026.09.22")
+}
+```
+
+Every push to `main` publishes `main-SNAPSHOT` to the [Maven Central snapshot repository](https://central.sonatype.com/repository/maven-snapshots/):
+
+```kotlin
+repositories {
+    maven("https://central.sonatype.com/repository/maven-snapshots/")
+}
+```
+
+`gradlew :chatpane:publishToMavenLocal` installs `main-SNAPSHOT` into the local Maven repository instead.
+The library does not pick JavaFX's platform jars; the application does, as for any JavaFX library.
+
 ## Demo
 
 ```

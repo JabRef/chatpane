@@ -17,3 +17,4 @@ New records: copy the current MADR template, next free number, `NNNN-short-title
 | [0009](0009-standard-javafx-control-architecture.md) | Standard JavaFX control architecture: Control, Skin, CSS, virtualized list | accepted |
 | [0010](0010-richtextarea-transcript-for-irc-and-modern.md) | IRC and modern layouts as one RichTextArea transcript (incubator) | accepted |
 | [0011](0011-message-renderer-hook-with-commonmark.md) | Message bodies through a renderer hook; Markdown with commonmark-java | accepted |
+| [0012](0012-maven-central-with-calver-versions.md) | Maven Central publishing with CalVer versions | accepted |

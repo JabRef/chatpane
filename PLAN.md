@@ -9,6 +9,11 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-09-23* — **Maven Central publishing (MADR 0012).**
+Oliver: "Port the maven central publishing flow from JabRef/html-to-node".
+vanniktech `maven-publish` on `:chatpane` as `org.jabref:chatpane`; `publish.yml` pushes `main-SNAPSHOT` (PRs: `pr<n>-SNAPSHOT`), `release.yml` releases each day tag `v<YYYY-MM-DD>` as `YYYY.MM.DD`.
+Needs the `KOPPOR_*` organization secrets to be available to this repository; `v2026-09-22` is not tagged yet — pushing it is the first release.
+
 *2026-09-22 (5)* — **Conventions moved to `AGENTS.md`.**
 Carl: "do it with a CLAUDE.md stub importing AGENTS.md".
 Merged the open `rename-claude-to-agents` branch; `CLAUDE.md` is now one line, `@AGENTS.md`, so Claude Code still loads the conventions and other agents read them directly.
