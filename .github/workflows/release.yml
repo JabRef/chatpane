@@ -1,0 +1,53 @@
+name: Release to Maven Central
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository == 'JabRef/chatpane'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          show-progress: 'false'
+      - name: Setup JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: corretto
+          check-latest: true
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Decode secretKeyRingFile
+        id: secring
+        uses: timheuer/base64-to-file@v2
+        with:
+          fileName: 'secring.gpg'
+          encodedString: ${{ secrets.KOPPOR_SIGNING_SECRETKEYRINGFILE_BASE64 }}
+      - name: Store secrets
+        run: |
+          cat >> gradle.properties <<EOF
+          signing.keyId=${{ secrets.KOPPOR_SIGNING_KEYID }}
+          signing.password=${{ secrets.KOPPOR_SIGNING_PASSWORD }}
+          signing.secretKeyRingFile=${{ steps.secring.outputs.filePath }}
+          mavenCentralUsername=${{ secrets.KOPPOR_MAVENCENTRALUSERNAME }}
+          mavenCentralPassword=${{ secrets.KOPPOR_MAVENCENTRALPASSWORD }}
+          EOF
+      - name: Guard against SNAPSHOT releases
+        run: |
+          if grep -q '^version = .*SNAPSHOT' chatpane/build.gradle.kts; then
+            echo "Tagged commit still has a SNAPSHOT version - refusing to release."
+            exit 1
+          fi
+      - name: Publish and release
+        run: ./gradlew :chatpane:publishAndReleaseToMavenCentral

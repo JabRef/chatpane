@@ -25,3 +25,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 testfx-junit = { module = "io.gitlab.fx-labs:testfx-junit", version.ref = "testfx" }
+
+[plugins]
+# Maven Central publishing (MADR 0012). Apache-2.0, build only.
+maven-publish = { id = "com.vanniktech.maven.publish", version = "0.37.0" }

@@ -9,6 +9,11 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-09-23* — **Maven Central publishing, SemVer proposed (MADR 0012, supersedes 0003).**
+Oliver: "Port the maven central publishing flow from JabRef/html-to-node"; then "switch to semver — and start with 0.1.0 — the -SNAPSHOTs are nice, no nightly thing".
+vanniktech `maven-publish` on `:chatpane` as `org.jabref:chatpane`; `publish.yml` pushes `0.1.0-SNAPSHOT` from `main` (PRs: `0.1.0-PR<n>-SNAPSHOT`), `release.yml` releases a `vX.Y.Z` tag. Changelog: the CalVer day sections, never tagged, are one `[Unreleased]` section now.
+Needs the `KOPPOR_*` organization secrets to be available to this repository.
+
 *2026-09-22 (5)* — **Conventions moved to `AGENTS.md`.**
 Carl: "do it with a CLAUDE.md stub importing AGENTS.md".
 Merged the open `rename-claude-to-agents` branch; `CLAUDE.md` is now one line, `@AGENTS.md`, so Claude Code still loads the conventions and other agents read them directly.
@@ -125,4 +130,4 @@ Consequence for JabRef: once M1 lands, `AiChatView` could replace `ListScrollPan
 - [ ] Avatars / per-sender colors as data (MADR 0007 exception)
 - [ ] Date separators, unread marker
 - [ ] Accessibility (roles, texts for screen readers)
-- [ ] Publishing: Maven Central coordinates, POM without JavaFX classifiers, SemVer question (MADR 0003)
+- [x] Publishing: Maven Central coordinates, POM without JavaFX classifiers, SemVer question (MADR 0012)

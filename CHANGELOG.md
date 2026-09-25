@@ -2,14 +2,13 @@
 
 All notable changes to ChatPane are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versions are release dates ([CalVer](https://calver.org/), `YYYY-MM-DD`), tagged `v<date>` on GitHub once the day is over.
-The topmost section is the day in progress — its link points at `main` until that tag exists.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2026-09-22] - 2026-09-22
+## [Unreleased]
 
 ### Added
 
+- **On Maven Central** as `org.jabref:chatpane`; `0.1.0-SNAPSHOT` in the snapshot repository after every push to `main`.
 - **`ChatPane`**, a JavaFX control showing a chat conversation in one of three layouts: talk bubbles left and right (`BUBBLES`), one line per message (`IRC`), or message by message with one header per group (`MODERN`). The layout can be switched at any time, from code or from CSS (`-cp-message-layout`).
 - **Selectable message text**: select and copy with the standard context menu and shortcuts, as in any JavaFX text field.
 - **Looks native in any theme**: the pane has no colors of its own and takes them from the application's JavaFX theme; the README's CSS reference lists every hook for restyling.
@@ -43,4 +42,4 @@ The topmost section is the day in progress — its link points at `main` until t
 - **Bubble text behaves like the transcript**: a bubble's body is a read-only rich-text area now, with the same selection, context menu, styles and links as IRC and modern.
 - **Bubbles keep your selection**: a new message no longer scrolls the bubble layout away while you have text selected in it, as IRC and modern already did.
 
-[2026-09-22]: https://github.com/calixtus/chatpane/commits/main
+[Unreleased]: https://github.com/calixtus/chatpane/commits/main
