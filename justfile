@@ -30,19 +30,6 @@ demo *ARGS:
 demo *ARGS:
     .\gradlew.bat :demo:run {{ if ARGS == "" { "" } else { "--args=\"" + ARGS + "\"" } }}
 
-# The screen size is explicit: `xvfb-run`'s default is the distribution's
-# (nixpkgs ships 640x480), too small for a test window.
-#
-# Run the TestFX UI tests (MADR 0008) on a virtual display.
-[unix]
-uitest:
-    xvfb-run -a -s "-screen 0 1920x1200x24" ./gradlew uiTest
-
-# Run the TestFX UI tests (MADR 0008) on the real desktop (Windows has no Xvfb).
-[windows]
-uitest:
-    .\gradlew.bat uiTest
-
 # Mechanical docs checks (CONSISTENCY.md).
 consistency:
     bash scripts/consistency.sh

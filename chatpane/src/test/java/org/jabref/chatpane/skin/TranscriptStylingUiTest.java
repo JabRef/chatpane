@@ -11,13 +11,11 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FxTestApplication;
 import org.jabref.chatpane.MessageLayout;
 import org.jabref.chatpane.MessageRenderer;
 
@@ -33,8 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// `-fx-wrap-text`, which made the area lay out in the middle of the CSS pass and fail
 /// ("duplicate children added").
 // [utest->dsn~transcript-restyle~1]
-@Tag("ui")
-@TestFxApplication(TranscriptStylingUiTest.TestApp.class)
+@FxTestApplication(TranscriptStylingUiTest.TestApp.class)
 class TranscriptStylingUiTest {
 
     /// A dark theme the way an application ships one: Modena's variables, as an author stylesheet.

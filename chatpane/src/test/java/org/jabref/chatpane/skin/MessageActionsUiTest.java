@@ -18,15 +18,13 @@ import jfx.incubator.scene.control.richtext.RichTextArea;
 import jfx.incubator.scene.control.richtext.TextPos;
 import jfx.incubator.scene.control.richtext.model.StyledTextModel;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatMessage.Status;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FxTestApplication;
 import org.jabref.chatpane.MessageAction;
 import org.jabref.chatpane.MessageLayout;
 
@@ -40,8 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// replaced in place as a generated answer grows.
 // [utest->dsn~message-actions~2]
 // [utest->dsn~conversation-views~3]
-@Tag("ui")
-@TestFxApplication(MessageActionsUiTest.TestApp.class)
+@FxTestApplication(MessageActionsUiTest.TestApp.class)
 class MessageActionsUiTest {
 
     private static final Instant T0 = Instant.parse("2026-09-22T10:00:00Z");

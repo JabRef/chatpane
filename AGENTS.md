@@ -9,8 +9,7 @@
 
 ## Conventions
 
-* Build: `gradlew build traceRequirements` must be green before every commit.
-  `gradlew uiTest` (needs a display; `just uitest` under Xvfb) when touching the skin, a cell or `chatpane.css`.
+* Build: `gradlew build traceRequirements` must be green before every commit; it runs the UI tests too, headless (MADR 0008).
 * Git: one worktree per task (workspace `CLAUDE.md`); integrate `main` with a merge, and when the push is rejected, `git pull --no-rebase` — **never rebase** (MADR 0004).
 * Changelog: `CHANGELOG.md` in Keep a Changelog format, SemVer (MADR 0012).
   Every change to user-visible behavior (API, look, demo) adds a bullet under `## [Unreleased]`.
@@ -45,12 +44,12 @@
   Windows is the development machine; CI builds on Linux.
 * Licenses: the project is Apache-2.0.
   Runtime dependencies of the library must be permissive (Apache-2.0, MIT, BSD) — JavaFX itself (GPLv2 with Classpath Exception) is the accepted exception.
-  Weak copyleft (EPL, MPL, LGPL, EUPL) only in test or build scope (e.g. TestFX's EUPL-1.2); strong copyleft never.
+  Weak copyleft (EPL, MPL, LGPL, EUPL) only in test or build scope; strong copyleft never.
   Check the license of every new dependency and name it in the build-file comment.
   Code taken over from JabRef (MIT) keeps a `// Adapted from JabRef (MIT), <path>` line; add JabRef's copyright notice to `NOTICE` with the first such file.
 * Unit tests for real logic (grouping, formatting, parsing), not for UI.
-  Rendered behavior (cells per layout, pseudo-classes, CSS-settable properties) gets a TestFX test instead (`@Tag("ui")`, `gradlew uiTest`, MADR 0008) — not part of `build`.
-  UI tests query nodes rather than drive the robot where they can (they run on the developer's desktop), and sort cells by `getIndex()`: the virtual flow keeps recycled cells in any order.
+  Rendered behavior (cells per layout, pseudo-classes, CSS-settable properties) gets a UI test instead (`*UiTest`, `@FxTestApplication(TestApp.class)`, MADR 0008): JavaFX's headless platform, part of `build`, no display needed.
+  UI tests query nodes and fire events rather than drive a robot, and sort cells by `getIndex()`: the virtual flow keeps recycled cells in any order; an exception on the FX thread fails the test.
   A `RichTextArea` builds its text cells a pulse later and draws segments as plain `Text` nodes without their style names: `FxThread.settle(root)` before looking, and find shown text by its content.
 * Docs: `README.md` is the user documentation — usage, the **CSS reference** (every style class, pseudo-class and CSS property the skin sets), demo, build.
   A new hook, CSS property or public API changes the README in the same commit.

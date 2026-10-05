@@ -77,8 +77,6 @@ dependencies {
     // Tests log through the same backend the demo uses (MADR 0005).
     testRuntimeOnly(lib("slf4j-tinylog"))
     testRuntimeOnly(lib("tinylog-impl"))
-    // UI tests (MADR 0008): fx-labs fork of TestFX, EUPL-1.2 (weak copyleft), test scope only.
-    testImplementation(lib("testfx-junit"))
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -101,23 +99,15 @@ fun Test.logFailuresInFull() {
     }
 }
 
+// UI tests run here too, on JavaFX's headless platform (MADR 0008): the test
+// extension `FxTestExtension` starts the toolkit with `glass.platform=Headless`,
+// so `build` needs no display. Set them here as well, so a test that touches
+// JavaFX before the extension runs gets the same platform.
 tasks.test {
-    // UI tests (@Tag("ui")) need a display — kept out of `build` so it stays
-    // green headless; they run via `uiTest`.
-    useJUnitPlatform {
-        excludeTags("ui")
-    }
-    logFailuresInFull()
-}
-
-tasks.register<Test>("uiTest") {
-    group = "verification"
-    description = "Runs the TestFX UI tests (needs a display or Xvfb)"
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = sourceSets["test"].runtimeClasspath
-    useJUnitPlatform {
-        includeTags("ui")
-    }
+    useJUnitPlatform()
+    systemProperty("glass.platform", "Headless")
+    systemProperty("prism.order", "sw")
+    // JavaFX loads its native libraries itself (JEP 472).
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     // Keeps java.awt.Desktop unsupported, so no test can start a real browser or
     // file manager that outlives the JVM and holds Gradle's output pipe open.

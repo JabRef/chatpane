@@ -11,13 +11,11 @@ import javafx.stage.Stage;
 import jfx.incubator.scene.control.richtext.RichTextArea;
 import jfx.incubator.scene.control.richtext.TextPos;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FxTestApplication;
 import org.jabref.chatpane.MessageLayout;
 
 import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
@@ -30,8 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// the end regardless until the views were split (review finding S2).
 // [utest->dsn~conversation-views~3]
 // [utest->dsn~bubble-view~2]
-@Tag("ui")
-@TestFxApplication(FollowNewestUiTest.TestApp.class)
+@FxTestApplication(FollowNewestUiTest.TestApp.class)
 class FollowNewestUiTest {
 
     private static final Instant T0 = Instant.parse("2026-09-22T10:00:00Z");
