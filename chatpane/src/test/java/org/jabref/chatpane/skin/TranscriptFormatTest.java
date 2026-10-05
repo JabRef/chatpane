@@ -17,7 +17,7 @@ import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
 import static org.jabref.chatpane.ChatMessage.Direction.OUTGOING;
 import static org.assertj.core.api.Assertions.assertThat;
 
-// [utest->dsn~transcript-paragraphs~4]
+// [utest->dsn~transcript-paragraphs~5]
 class TranscriptFormatTest {
 
     private static final Instant T0 = Instant.parse("2026-09-22T10:00:00Z");

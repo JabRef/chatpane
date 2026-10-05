@@ -27,9 +27,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Localizable texts**: `ChatPane.setTextLocalizer(…)` translates the pane's own texts (the context menu's *Copy* and *Select All*); JabRef can pass `Localization::lang`.
 - **Time format as a pane property**: `ChatPane.timeFormatterProperty()` sets how times read, in every layout alike.
 - **Find in the conversation**: `ChatPane.setFindQuery(…)` highlights every occurrence in the message texts, in every layout, and scrolls to the current one; `findNext()`/`findPrevious()` step through them. The demo has a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
+- **Syntax highlighting hook for code blocks**: `MessageRenderer.markdown(CodeHighlighter)` hands each code block with its language to the application's highlighter and styles its tokens as `token-<type>`; colors come from the application's stylesheet. The demo highlights JSON.
 
 ### Changed
 
+- **`TextSpan` has a fourth component**, `token` (the code token type); the three-part constructor still works.
 - **`ChatMessage` takes a `Direction`** (`INCOMING`, `OUTGOING`) instead of a `boolean outgoing`; `MessageLayout.pseudoClassName()` is now `cssName()`, like `Direction.cssName()`.
 
 ### Fixed

@@ -1,0 +1,20 @@
+/*
+ * The demo's colors for highlighted code (JsonHighlighter), in the light
+ * theme; dark.css has the dark ones. Token colors are the application's: the
+ * library brings none (MADR 0007). Segments are Text: -fx-fill.
+ */
+.chat-pane .token-property {
+    -fx-fill: #7b1fa2;
+}
+
+.chat-pane .token-string {
+    -fx-fill: #2e7d32;
+}
+
+.chat-pane .token-number {
+    -fx-fill: #1565c0;
+}
+
+.chat-pane .token-keyword {
+    -fx-fill: #c2185b;
+}

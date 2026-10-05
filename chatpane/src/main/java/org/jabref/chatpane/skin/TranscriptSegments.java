@@ -18,7 +18,8 @@ import org.jabref.chatpane.TextSpan;
 /// pseudo-classes — and, for
 /// rendered text, the line's kind (`line-paragraph`, `line-heading` plus `line-heading-2`,
 /// `line-quote`, `line-list-item`, `line-code-block`) and the span's styles (`span-bold`,
-/// `span-italic`, `span-code`, `span-strikethrough`, `span-link`).
+/// `span-italic`, `span-code`, `span-strikethrough`, `span-link`) — in highlighted code also the
+/// token's type (`token-string`, …).
 /// Find matches are highlights under the text, named `find-match` (plus `find-current`).
 final class TranscriptSegments {
 
@@ -80,6 +81,10 @@ final class TranscriptSegments {
                 names.add("line-heading-" + line.level());
             }
             span.styles().stream().sorted().forEach(style -> names.add("span-" + style.cssName()));
+            // [impl->dsn~code-highlighting~1]
+            if (span.token() != null) {
+                names.add("token-" + span.token());
+            }
             String target = span.link();
             if (target != null) {
                 names.add("span-link");

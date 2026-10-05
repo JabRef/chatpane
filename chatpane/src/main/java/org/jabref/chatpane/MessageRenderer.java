@@ -37,4 +37,10 @@ public interface MessageRenderer {
     static MessageRenderer markdown() {
         return MarkdownRenderer.INSTANCE;
     }
+
+    /// [#markdown()] with syntax highlighting: `highlighter` splits every fenced and indented code
+    /// block into tokens, which the rendered text carries as style names `token-<type>`.
+    static MessageRenderer markdown(CodeHighlighter highlighter) {
+        return new MarkdownRenderer(highlighter);
+    }
 }

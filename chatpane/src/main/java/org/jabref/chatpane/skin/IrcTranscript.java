@@ -15,7 +15,7 @@ import static org.jabref.chatpane.skin.TranscriptSegments.paragraphFor;
 
 /// [org.jabref.chatpane.MessageLayout#IRC]: the first line of a message as
 /// `time <sender> text`, every further rendered line a paragraph of its own.
-// [impl->dsn~transcript-paragraphs~4]
+// [impl->dsn~transcript-paragraphs~5]
 final class IrcTranscript implements TranscriptFormat {
 
     private final RenderContext context;

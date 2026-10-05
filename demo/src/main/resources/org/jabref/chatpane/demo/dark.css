@@ -16,3 +16,20 @@
     -fx-text-box-border: #555759;
     -fx-selection-bar-non-focused: #45494a;
 }
+
+/* Highlighted code (demo.css has the light colors). */
+.chat-pane .token-property {
+    -fx-fill: #ce93d8;
+}
+
+.chat-pane .token-string {
+    -fx-fill: #a5d6a7;
+}
+
+.chat-pane .token-number {
+    -fx-fill: #90caf9;
+}
+
+.chat-pane .token-keyword {
+    -fx-fill: #f48fb1;
+}

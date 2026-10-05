@@ -54,6 +54,9 @@ module my.app {
 
 Message texts go through a `MessageRenderer` — the hook for how bodies read.
 `MessageRenderer.markdown()` ([commonmark-java](https://github.com/commonmark/commonmark-java), with strikethrough) covers headings, emphasis, inline and block code, links, bullet and numbered lists, block quotes; HTML is shown as text, and a single line break stays a line break.
+`MessageRenderer.markdown(highlighter)` highlights code blocks: a `CodeHighlighter` gets the fence's language (` ```json ` gives `json`) and the code and returns `CodeToken`s — text and a type such as `string` — which the text carries as style names `token-<type>`.
+The library brings no highlighter and no token colors; the application colors the tokens from its stylesheet (`.chat-pane .token-string { -fx-fill: …; }`).
+A highlighter that throws, or whose tokens do not add up to the code, leaves the block plain.
 An application can plug in its own renderer; it returns the library's small `TextLine`/`TextSpan` model, which every layout shows alike ([MADR 0011](docs/decisions/0011-message-renderer-hook-with-commonmark.md)).
 
 Replacing one message (`set(index, …)`) updates it in place in every layout: the rest of the conversation, the scroll position and the user's selection stay.
@@ -105,6 +108,7 @@ Style names of the text (transcript and bubble bodies alike):
 | `incoming`, `outgoing`, `sent`, `pending`, `error`, `continued` | every run of a message | its direction and status; `continued` when it continues its sender's group |
 | `line-paragraph`, `line-heading`, `line-quote`, `line-list-item`, `line-code-block` | the runs of a rendered line | plus `line-heading-1` … `line-heading-6` |
 | `span-bold`, `span-italic`, `span-code`, `span-strikethrough`, `span-link` | a styled run | |
+| `token-<type>` | a run of highlighted code | the `CodeToken` type from the application's `CodeHighlighter`, e.g. `token-string`; no default style |
 
 | CSS property | On | Values | Default |
 |--------------|----|--------|---------|

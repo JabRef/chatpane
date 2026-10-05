@@ -57,6 +57,10 @@ final class BubbleText extends RichTextArea {
                     text.getStyleClass().add("line-heading-" + line.level());
                 }
                 span.styles().forEach(style -> text.getStyleClass().add("span-" + style.cssName()));
+                if (span.token() != null) {
+                    // A token's style may change its width (a bold keyword).
+                    text.getStyleClass().add("token-" + span.token());
+                }
                 measure.getChildren().add(text);
             }
         }

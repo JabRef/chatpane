@@ -14,7 +14,7 @@ import org.jabref.chatpane.ChatMessage;
 /// [TranscriptModel] asks for [#paragraphCount] of every message but for [#paragraphs] only of
 /// the ones on screen, so the count must not build anything — and must match what
 /// [#paragraphs] would build.
-// [impl->dsn~transcript-paragraphs~4]
+// [impl->dsn~transcript-paragraphs~5]
 interface TranscriptFormat {
 
     /// The paragraphs of one message; `continued` if it continues the group of the one before

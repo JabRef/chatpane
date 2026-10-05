@@ -21,6 +21,12 @@ Highlights are `RichParagraph` highlights by style name (`find-match`, `find-cur
 `RichTextArea` has no public scroll: the transcript reveals the current match by selecting it; bubbles scroll the match's bubble to the top.
 The skin applies find changes once per pulse — one query change is three events, and the pane finds a new message before the view has it.
 Demo: find bar on `Shortcut+F`. Tests: `MessageSearchTest`, `FindHighlightsTest`, `TranscriptModelTest` (locate), `FindUiTest`.
+*2026-10-05* — **Code highlighting hook.**
+Carl: from the review of JabRef's open `component: ai` PRs — PR 17181 highlights JSON answers — "now the code block highlighting hook".
+Public `CodeHighlighter` (language, code → `CodeToken`s with a CSS-name type) and `MessageRenderer.markdown(highlighter)`; a token becomes `TextSpan.token` and the style name `token-<type>`. No highlighter and no token colors in the library (MADR 0007); a highlighter that throws or loses text leaves the block plain, with a warning. `lineCount` renders without it.
+Not taken over from 17181: turning bare JSON into a fenced block and pretty-printing it — AI-specific, JabRef's (a `MessageRenderer` wrapping `markdown(…)` does it).
+Demo: `JsonHighlighter` (a regex lexer, own tests in `:demo`), colors in `demo.css`/`dark.css`, a JSON sample.
+Tests: `CodeHighlightingTest`, `CodeHighlightingUiTest` (a token color from an application stylesheet in every layout), `JsonHighlighterTest`.
 
 *2026-09-23* — **Maven Central publishing, SemVer proposed (MADR 0012, supersedes 0003).**
 Oliver: "Port the maven central publishing flow from JabRef/html-to-node"; then "switch to semver — and start with 0.1.0 — the -SNAPSHOTs are nice, no nightly thing".
@@ -72,8 +78,7 @@ Not checked: a dark theme.
 2. Hanging indent for wrapped IRC lines (paragraph `SPACE_LEFT` + negative `FIRST_LINE_INDENT`, if the incubator supports it).
 3. Copy as Markdown (as `MarkdownTextFlow` does): *Copy* of a Markdown message puts its source on the clipboard next to the plain text.
 4. Demo dark theme: a selected toggle is hard to tell from the others.
-5. Syntax highlighting for fenced code blocks (from JabRef PR 17181, JSON answers): keep the fence's language on the line, a pluggable highlighter naming tokens by style class; turning bare JSON into a fenced block stays JabRef's (a `MessageRenderer` wrapping `markdown()`).
-6. Find: a long bubble scrolls to its top, not to the match in it; and while finding, an answer that grows at the end still follows the newest message in the bubble view.
+5. Find: a long bubble scrolls to its top, not to the match in it; and while finding, an answer that grows at the end still follows the newest message in the bubble view.
 
 ## Code review (2026-09-22, after `f19a756`)
 

@@ -23,6 +23,17 @@ Covers:
 
 Needs: dsn
 
+### Highlighted code in the demo
+`req~demo-code-highlighting~1`
+
+The demo shows highlighted code in a sample message, with colors for both of its themes, as an application would do it.
+
+Covers:
+- feat~demo-application~1
+- feat~rich-message-text~1
+
+Needs: dsn
+
 ### Light and dark
 `req~demo-theme~1`
 
@@ -84,6 +95,18 @@ Covers:
 - req~demo-find~1
 
 Needs: impl
+
+### JSON highlighter
+`dsn~demo-code-highlighting~1`
+
+The *Markdown* text format renders with `MessageRenderer.markdown(new JsonHighlighter())`: a regex lexer that splits ` ```json ` blocks (any case) into `property` (a string before a colon), `string`, `number`, `keyword` (`true`, `false`, `null`) and `punctuation` tokens and leaves other languages plain; unfinished JSON still adds up to the code, as an answer being generated needs.
+`demo.css`, always on the scene, colors the tokens for the light theme; `dark.css` overrides them for the dark one.
+A sample message from bob holds a JSON block.
+
+Covers:
+- req~demo-code-highlighting~1
+
+Needs: impl, utest
 
 ### Theme switch
 `dsn~demo-theme-switch~1`
