@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// The body of a bubble, a read-only RichTextArea: as tall as its text, as wide as its widest line
 /// up to the bubble's share, its selection visible on either bubble kind, Markdown styled, links
 /// clickable. Order of the three messages: short incoming, long incoming, outgoing.
-// [utest->dsn~bubble-text~1]
+// [utest->dsn~bubble-text~2]
 // [utest->dsn~message-links~1]
 @FxTestApplication(BubbleTextUiTest.TestApp.class)
 class BubbleTextUiTest {

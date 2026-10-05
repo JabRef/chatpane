@@ -23,13 +23,14 @@ import org.jabref.chatpane.ChatMessage;
 /// for are kept. (Holding every built paragraph cost about 1 KB per message: 100 MB for 100 000.)
 ///
 /// The document grows at the end ([#append(List, int)]) — the common case of a chat — and a
-/// message can be replaced in place ([#update(List, int)]) — an answer being generated; both fire
-/// the matching change event, so the view keeps its scroll position and the user's selection.
+/// message can be replaced in place ([#update(List, int)]) — an answer being generated — or removed
+/// ([#remove(List, int)]) — a message deleted; each fires the matching change event, so the view
+/// keeps its scroll position and the user's selection.
 /// Anything else is a new model.
 ///
 /// A document always has at least one paragraph; an empty transcript is one empty paragraph,
 /// which the first append replaces.
-// [impl->dsn~transcript-model~4]
+// [impl->dsn~transcript-model~5]
 final class TranscriptModel extends StyledTextModelViewOnlyBase {
 
     /// Messages whose paragraphs stay built: a screenful, with room to scroll back and forth.
@@ -148,6 +149,59 @@ final class TranscriptModel extends StyledTextModelViewOnlyBase {
             fireChangeEvent(start, end, firstLength, 0, 0);
         } else {
             fireChangeEvent(start, end, firstLength, newCount - 1, getPlainText(first + newCount - 1).length());
+        }
+        return true;
+    }
+
+    /// Removes the messages from `from` on that `all`, the whole new list, no longer has, and fires
+    /// the removal of their paragraphs — together with the successor's new ones if it now continues
+    /// a group, or no longer does. Returns `false`, changing nothing, if no message would be left:
+    /// then the caller rebuilds (an empty document is a placeholder paragraph).
+    boolean remove(List<ChatMessage> all, int from) {
+        int to = from + messages.size() - all.size();
+        if (all.isEmpty() || to <= from) {
+            return false;
+        }
+        boolean tail = to == messages.size();
+        boolean regroups = !tail
+                && MessageGrouping.continuesGroup(messages.get(to - 1), messages.get(to))
+                        != MessageGrouping.continuesGroup(from > 0 ? messages.get(from - 1) : null, messages.get(to));
+        // The paragraphs that go: the removed messages', and the successor's too if it regroups.
+        int first = starts[from];
+        int end = starts[regroups ? to + 1 : to];
+        TextPos start;
+        TextPos stop;
+        if (tail) {
+            // From the end of the line before, so no empty line stays behind.
+            start = TextPos.ofLeading(first - 1, getPlainText(first - 1).length());
+            stop = TextPos.ofLeading(end - 1, getPlainText(end - 1).length());
+        } else if (regroups) {
+            start = TextPos.ofLeading(first, 0);
+            stop = TextPos.ofLeading(end - 1, getPlainText(end - 1).length());
+        } else {
+            // Whole lines, up to the successor's first.
+            start = TextPos.ofLeading(first, 0);
+            stop = TextPos.ofLeading(end, 0);
+        }
+
+        int count = to - from;
+        messages.subList(from, to).clear();
+        int added = 0;
+        if (regroups) {
+            ChatMessage successor = messages.get(from);
+            added = format.paragraphCount(successor, MessageGrouping.continuesGroup(from > 0 ? messages.get(from - 1) : null, successor));
+        }
+        int delta = added - (end - first);
+        // starts[from] stays: the successor begins where the first removed message began.
+        for (int i = from + 1; i <= messages.size(); i++) {
+            starts[i] = starts[i + count] + delta;
+        }
+        // The cache is keyed by message index, which shifted.
+        built.clear();
+        if (added == 0) {
+            fireChangeEvent(start, stop, 0, 0, 0);
+        } else {
+            fireChangeEvent(start, stop, getPlainText(first).length(), added - 1, getPlainText(first + added - 1).length());
         }
         return true;
     }

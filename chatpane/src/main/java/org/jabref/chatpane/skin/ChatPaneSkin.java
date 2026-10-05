@@ -32,7 +32,7 @@ import org.jabref.chatpane.MessageLayout;
 /// Final (Effective Java, item 19): its views are package-private and it has no hooks worth
 /// overriding; an application that wants another look writes its own skin and sets it with
 /// [ChatPane#setSkin] or `-fx-skin`.
-// [impl->dsn~chat-pane-skin~7]
+// [impl->dsn~chat-pane-skin~8]
 // [impl->dsn~no-input-in-the-pane~1]
 public final class ChatPaneSkin extends SkinBase<ChatPane> {
 
@@ -154,10 +154,13 @@ public final class ChatPaneSkin extends SkinBase<ChatPane> {
         List<ChatMessage> messages = getSkinnable().getMessages();
         int from = MessageChanges.appendedFrom(change);
         int replaced = MessageChanges.replacedAt(change);
+        int removed = MessageChanges.removedFrom(change);
         if (from != MessageChanges.NOT_AN_APPEND) {
             shown.appended(messages, from);
         } else if (replaced != MessageChanges.NOT_AN_APPEND) {
             shown.updated(messages, replaced);
+        } else if (removed != MessageChanges.NOT_AN_APPEND) {
+            shown.removed(messages, removed);
         } else {
             shown.replaced(messages);
         }

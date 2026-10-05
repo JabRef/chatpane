@@ -192,11 +192,12 @@ Covers:
 Needs: impl, utest
 
 ### Bubble body
-`dsn~bubble-text~1`
+`dsn~bubble-text~2`
 
 In the bubble layout, a message body is a `BubbleText`: a read-only, non-focus-traversable `RichTextArea` (style classes `rich-text-area` and `message-body`) over a one-message `TranscriptModel` in the `BodyFormat` — the format the modern layout uses for its bodies — so selection, the context menu, *Copy*, Markdown styles and links behave as in the transcript.
 `chatpane.css` flattens it (no background, border, padding or caret, wrapping, `-fx-use-content-height`), so it is as tall as its text.
 Its preferred width is its widest rendered line, measured with `Text` nodes that carry the spans' style names inside the bubble, where the stylesheet gives them the fonts the area's text gets (Workaround W5); the bubble's max width (70 % of the list) caps it, and the area wraps below that.
+The area knows its content height only after its own layout, which a fresh body has not had when the list measures its cell — and a growing answer builds its cell anew with every word, so the list jumped by the difference each time; a body never laid out therefore lays itself out at that width before it reports its preferred height (Workaround W8).
 Selection colors contrast with the bubble around it: the accent color in an incoming bubble, the laddered text color in an outgoing one, whose background already is the accent — both half transparent.
 
 Covers:
@@ -224,7 +225,7 @@ Needs: impl, utest
 `dsn~code-highlighting~1`
 
 `CodeHighlighter` (public, functional) turns a code block — the first word of the fence's info string as language (empty for none and for an indented block), and the code without its final line break — into `CodeToken`s: text (line breaks allowed) and an optional type, a CSS name (`[a-z0-9]+(-[a-z0-9]+)*`, checked like a span's token).
-`MessageRenderer.markdown(highlighter)` is a `MarkdownRenderer` holding it: a code block's tokens are split at line breaks into `CODE_BLOCK` lines, each token a `CODE` span carrying its type, which the formats (`TranscriptSegments`) and the bubble's measuring texts (`dsn~bubble-text~1`) turn into the style name `token-<type>`.
+`MessageRenderer.markdown(highlighter)` is a `MarkdownRenderer` holding it: a code block's tokens are split at line breaks into `CODE_BLOCK` lines, each token a `CODE` span carrying its type, which the formats (`TranscriptSegments`) and the bubble's measuring texts (`dsn~bubble-text~2`) turn into the style name `token-<type>`.
 If the highlighter throws or its tokens do not add up to the code, the renderer logs a warning and shows the block unhighlighted.
 `lineCount` renders without the highlighter: tokens never change the lines, and the transcript counts every message.
 The library has no highlighter and `chatpane.css` no `token-` rule (MADR 0007).
@@ -267,10 +268,10 @@ Covers:
 Needs: impl
 
 ### Skin
-`dsn~chat-pane-skin~7`
+`dsn~chat-pane-skin~8`
 
-`ChatPaneSkin` holds one `ConversationView` per layout in an `EnumMap` — the one place that maps layouts to views: `BUBBLES` → `BubbleView` (`dsn~bubble-view~3`), `IRC` → `TranscriptView` with `IrcTranscript`, `MODERN` → `TranscriptView` with `ModernTranscript` (`dsn~transcript-view~5`).
-A layout change hides the shown view, puts the new one on screen and then shows it (so its text cells are built in the scene, with the pane's CSS); a change of the time formatter, the renderer or the actions renders the shown view again; the skin's only other job is to report each change of the messages to the shown view, as an append, the replacement of one message, or anything else (`dsn~message-changes~2`).
+`ChatPaneSkin` holds one `ConversationView` per layout in an `EnumMap` — the one place that maps layouts to views: `BUBBLES` → `BubbleView` (`dsn~bubble-view~4`), `IRC` → `TranscriptView` with `IrcTranscript`, `MODERN` → `TranscriptView` with `ModernTranscript` (`dsn~transcript-view~6`).
+A layout change hides the shown view, puts the new one on screen and then shows it (so its text cells are built in the scene, with the pane's CSS); a change of the time formatter, the renderer or the actions renders the shown view again; the skin's only other job is to report each change of the messages to the shown view, as an append, the replacement of one message, a removal, or anything else (`dsn~message-changes~3`).
 Listeners go through `SkinBase.registerChangeListener`/`registerListChangeListener`, so `dispose()` removes them; it also hides the shown view, so a replaced skin keeps nothing alive.
 The skin is `final` (Effective Java item 19): it offers no hooks to override, and a different look is a different skin (`setSkin`, `-fx-skin`).
 
@@ -281,11 +282,12 @@ Covers:
 Needs: impl, utest
 
 ### Conversation views
-`dsn~conversation-views~4`
+`dsn~conversation-views~5`
 
-A `ConversationView` is one way of showing the conversation: `node()`, `show(messages)`, `hide()`, `appended(messages, from)`, `updated(messages, index)` (one message replaced — updated in place, or re-rendered if the view cannot), `replaced(messages)`, `restyle()` (the styles the text is drawn with changed: draw it again, `dsn~transcript-restyle~1`), `findChanged()` (draw the find highlights again, `dsn~find-highlights~1`) and `reveal(match)` (`dsn~find-reveal~1`).
+A `ConversationView` is one way of showing the conversation: `node()`, `show(messages)`, `hide()`, `appended(messages, from)`, `updated(messages, index)` (one message replaced — updated in place, or re-rendered if the view cannot), `removed(messages, from)` (a run of messages removed, in place), `replaced(messages)`, `restyle()` (the styles the text is drawn with changed: draw it again, `dsn~transcript-restyle~1`), `findChanged()` (draw the find highlights again, `dsn~find-highlights~1`) and `reveal(match)` (`dsn~find-reveal~1`).
 Only the shown view tracks the messages; `show` builds it from the current list, `hide` releases them.
 Every view follows the newest message by the same rule: after `show`, `appended`, `replaced`, or `updated` of the last message, it scrolls to the end unless the user has text selected in it.
+A removal is no news: `removed` leaves the view where it is — deleting a message used to rebuild the view and jump to the end.
 
 Covers:
 - req~show-conversation~2
@@ -295,9 +297,9 @@ Covers:
 Needs: impl, utest
 
 ### Change classification
-`dsn~message-changes~2`
+`dsn~message-changes~3`
 
-`MessageChanges.appendedFrom` turns a list change into the index of the first appended message when the change only added messages at the end; `replacedAt` into the index of the one message a `set(index, …)` replaced; both return `NOT_AN_APPEND` for anything else, and reset the change afterwards, so later listeners read it whole.
+`MessageChanges.appendedFrom` turns a list change into the index of the first appended message when the change only added messages at the end; `replacedAt` into the index of the one message a `set(index, …)` replaced; `removedFrom` into the index of the first removed message when the change only removed one run of adjacent messages; all three return `NOT_AN_APPEND` for anything else, and reset the change afterwards, so later listeners read it whole.
 
 Covers:
 - req~show-conversation~2
@@ -306,13 +308,14 @@ Covers:
 Needs: impl, utest
 
 ### Bubble view
-`dsn~bubble-view~3`
+`dsn~bubble-view~4`
 
-`BubbleView` shows a virtualized `ListView` (style class `chat-pane-list`, MADR 0009) of `MessageCell`s over its own copy of the messages: `show`/`replaced` set it, `appended` adds the new tail, `updated` sets the one item (and its successor's, if the change affects that one's grouping), `hide` clears it.
+`BubbleView` shows a virtualized `ListView` (style class `chat-pane-list`, MADR 0009) of `MessageCell`s over its own copy of the messages: `show`/`replaced` set it, `appended` adds the new tail, `updated` sets the one item (and its successor's, if the change affects that one's grouping), `removed` removes the items (and sets the successor's, likewise), `hide` clears it.
 Text counts as selected when the scene's focus owner is a `BubbleText` of this list with a non-empty selection; otherwise a change scrolls to the last message and pins the list there.
 A new body knows its final height only after its area laid out, a pulse later, and the flow keeps its position as a fraction: the newest bubble slid partly out of view, and an answer growing word by word flickered between shown whole and cut off.
 So the list's skin (`BubbleFlow.Skin`) lays it out with a `BubbleFlow`, a `VirtualFlow` that, while pinned, lays out again from the end (at most three times) whenever a layout pass ends short of it — in the same pulse, so no frame shows the cut-off state.
 A position change outside a layout pass is the user's: it unpins the flow, unless it ends at the very end, which pins it again; a change with text selected unpins it too.
+Unpinned, the fraction would also shift the view when messages above it are removed: before a removal the flow notes the top message and its offset, and its next layout puts that message back there.
 The wheel over a body scrolls the list by itself (the content-high area passes wheel events on).
 
 Covers:
@@ -358,13 +361,15 @@ Covers:
 Needs: impl, utest
 
 ### Transcript view
-`dsn~transcript-view~5`
+`dsn~transcript-view~6`
 
 `TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~5`); the model is the area's own, no second reference is kept.
 `show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu`, the action buttons are `TranscriptActions` (`dsn~message-actions~4`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
-Following the newest message (`dsn~conversation-views~4`) moves the hidden caret to the end of the document, which scrolls there.
+Following the newest message (`dsn~conversation-views~5`) moves the hidden caret to the end of the document, which scrolls there.
+A removal (`TranscriptModel.remove`) moves a caret below it, and the area scrolls a moved caret into view; so without a selection the view drops the caret before it removes (Workaround W9) — deleting a message no longer jumps to the end.
+A removal above the shown lines still moves the view, by an upstream bug the area offers no way around (U1 in `docs/upstream.md`).
 
 Covers:
 - req~select-across-messages~1
@@ -389,7 +394,7 @@ Needs: impl, utest
 ### Transcript formats
 `dsn~transcript-paragraphs~5`
 
-A `TranscriptFormat` turns one message into built paragraphs (`TranscriptLine`: the `RichParagraph` and its links), and says how many it would build (`paragraphCount`) without building them — the transcript model counts every message but builds only the visible ones (`dsn~transcript-model~4`); the count is the renderer's `lineCount` (plus the header).
+A `TranscriptFormat` turns one message into built paragraphs (`TranscriptLine`: the `RichParagraph` and its links), and says how many it would build (`paragraphCount`) without building them — the transcript model counts every message but builds only the visible ones (`dsn~transcript-model~5`); the count is the renderer's `lineCount` (plus the header).
 Three implementations, over the rendered `TextLine`s of the `RenderContext`: `IrcTranscript`, `ModernTranscript`, and `BodyFormat` (the lines alone — the body of a bubble and of a modern entry).
 `IrcTranscript`: the first rendered line of a message prefixed `time <sender> `, every further line a paragraph of its own.
 `ModernTranscript`: a header paragraph `sender  time` for a message that starts a group, then the `BodyFormat` paragraphs.
@@ -402,12 +407,13 @@ Covers:
 Needs: impl, utest
 
 ### Transcript model
-`dsn~transcript-model~4`
+`dsn~transcript-model~5`
 
 `TranscriptModel` is a read-only `StyledTextModel` (`StyledTextModelViewOnlyBase`), virtual like the bubble list: it holds the messages and, per message, the index of its first paragraph (an `int[]`), and builds a message's paragraphs with its `TranscriptFormat` only when the area asks for one of them; the last 256 messages built stay cached, links included (`linkAt`).
 Grouping (`dsn~message-grouping~1`) looks at the message before, also across an append.
 Measured with 100 000 messages: holding every built paragraph cost about 107 MB, the virtual model about 6 MB — what the bubble list costs.
 `update(messages, index)` replaces one message: its paragraphs are rebuilt, the offsets after it shift, and the change event covers exactly its old paragraphs (text added on the first line, one line per further paragraph, the last one's length after them); it refuses (`false`) if the replacement changes whether the next message continues the group.
+`remove(messages, from)` drops a run of messages: the change event removes their whole lines (for the tail, from the end of the line before, so no empty line stays), together with the successor's paragraphs replaced by its new ones if it now continues a group or no longer does; it refuses (`false`) if no message would be left.
 `append` adds messages at the end and fires the matching content change — no characters on the old last line, one line per paragraph, the last paragraph's length after them — so the area keeps its scroll position and selection.
 An empty transcript is one empty placeholder paragraph (a document is never empty), which the first append replaces, firing its text as added on the existing line.
 
@@ -473,7 +479,7 @@ Needs: impl, utest
 It holds layout and structure and no palette of its own (MADR 0007): colors come only from the standard Modena lookups — a container sets `-fx-background` (`-fx-control-inner-background` for rows, `-fx-base` for a bubble, `-fx-accent` for an outgoing bubble) and its labels take `-fx-text-background-color`, which Modena ladders against it; senders use `-fx-accent`, times the text color at 70 % opacity (Modena's `-fx-mid-text-color` is a fixed dark gray, unreadable on dark).
 Rendered text takes `-fx-fill` (the area resolves style names into styles; Workaround W3): in the transcript text and times `-fx-text-inner-color`, senders `-fx-accent`; in bubbles the laddered `-fx-text-background-color`.
 Span and line styles are the same everywhere: bold, italic, monospace code, strikethrough, heading sizes 1.4/1.2/1.1 em, quotes italic and dimmed, links in the accent and underlined — on an outgoing bubble (the accent) in the text color.
-The bubble body is flattened (`dsn~bubble-text~1`) and its selection highlight set per bubble kind; find highlights (`.find-match`, `.find-current`) are filled the same way, at 30 % and 85 % opacity, without an outline.
+The bubble body is flattened (`dsn~bubble-text~2`) and its selection highlight set per bubble kind; find highlights (`.find-match`, `.find-current`) are filled the same way, at 30 % and 85 % opacity, without an outline.
 The style probe's background lists the lookups the text uses (`dsn~transcript-restyle~1`); the areas' wrapping and caret settings are no longer set here (Workaround W6).
 Status without a color of its own (Modena has no error lookup): a pending bubble dimmed, a failed one with a dashed outline in the text color, pending and failed text italic in both views; action buttons small.
 Sizes are in `em`.

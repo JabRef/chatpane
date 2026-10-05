@@ -164,6 +164,7 @@ gradlew build traceRequirements   # compile, unit and UI tests (headless, no dis
 * [docs/requirements/](docs/requirements/README.md) — features, requirements and designs, traced to code with OpenFastTrace
 * [docs/decisions/](docs/decisions/README.md) — architectural decision records (MADR)
 * [docs/workarounds.md](docs/workarounds.md) — workarounds for upstream issues, and when each can go
+* [docs/upstream.md](docs/upstream.md) — bugs to report and features to request upstream (mostly `RichTextArea`)
 * [CHANGELOG.md](CHANGELOG.md) — user-visible changes by date
 
 ## License

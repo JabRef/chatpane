@@ -35,9 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// Switching the layout re-renders the same messages in the new shape. Needs the toolkit and a
 /// shown stage (cells exist only once laid out), headless like every UI test (MADR 0008).
 // [utest->dsn~chat-pane-control~5]
-// [utest->dsn~chat-pane-skin~7]
+// [utest->dsn~chat-pane-skin~8]
 // [utest->dsn~message-cell-bubbles~3]
-// [utest->dsn~transcript-view~5]
+// [utest->dsn~transcript-view~6]
 @FxTestApplication(ChatPaneUiTest.TestApp.class)
 class ChatPaneUiTest {
 

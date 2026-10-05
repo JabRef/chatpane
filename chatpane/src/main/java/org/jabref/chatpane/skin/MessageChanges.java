@@ -3,10 +3,10 @@ package org.jabref.chatpane.skin;
 import javafx.collections.ListChangeListener;
 
 /// Classifies a change of the message list, so a view can append instead of rebuilding.
-// [impl->dsn~message-changes~2]
+// [impl->dsn~message-changes~3]
 final class MessageChanges {
 
-    /// Returned by [#appendedFrom] and [#replacedAt] when the change is not of their kind.
+    /// Returned by [#appendedFrom], [#replacedAt] and [#removedFrom] when the change is not of their kind.
     static final int NOT_AN_APPEND = -1;
 
     private MessageChanges() {
@@ -19,6 +19,21 @@ final class MessageChanges {
         try {
             if (change.next() && change.wasReplaced() && change.getRemovedSize() == 1 && change.getAddedSize() == 1
                     && !change.next()) {
+                index = changeFrom(change);
+            }
+        } finally {
+            change.reset();
+        }
+        return index;
+    }
+
+    /// The index of the first removed message if `change` only removed one run of adjacent messages
+    /// (`remove(index)`, `removeIf` on one message, `remove(from, to)`), else [#NOT_AN_APPEND].
+    /// Leaves the change reset.
+    static int removedFrom(ListChangeListener.Change<?> change) {
+        int index = NOT_AN_APPEND;
+        try {
+            if (change.next() && change.wasRemoved() && !change.wasAdded() && !change.next()) {
                 index = changeFrom(change);
             }
         } finally {

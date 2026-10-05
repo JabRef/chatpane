@@ -5,6 +5,7 @@ import java.util.List;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 
 import jfx.incubator.scene.control.richtext.RichTextArea;
@@ -19,8 +20,9 @@ import org.jabref.chatpane.TextSpan;
 ///
 /// Its height comes from the area itself (`-fx-use-content-height`, set in `chatpane.css`). Its
 /// width is measured here, so a short message gets a short bubble: the area's own
-/// `useContentWidth` stops wrapping, which a long message needs (Workaround W5).
-// [impl->dsn~bubble-text~1]
+/// `useContentWidth` stops wrapping, which a long message needs (Workaround W5). A fresh body
+/// lays itself out before it reports its height (Workaround W8).
+// [impl->dsn~bubble-text~2]
 final class BubbleText extends RichTextArea {
 
     /// Headroom so rounding in the area's own layout never wraps a line the measurement kept.
@@ -95,6 +97,22 @@ final class BubbleText extends RichTextArea {
         Insets insets = getInsets();
         Insets padding = getContentPadding() == null ? Insets.EMPTY : getContentPadding();
         return Math.ceil(widest) + WRAP_SLACK + insets.getLeft() + insets.getRight() + padding.getLeft() + padding.getRight();
+    }
+
+    /// The height of the text at the width the body will get. The area learns its content height
+    /// only in its own layout, which a fresh body has not had when the list measures its cell: it
+    /// reported its minimum, and the list jumped by the difference for a frame — with every word of
+    /// a growing answer, whose cell is built anew each time. So a body never laid out lays itself
+    /// out first, at its preferred width within the bubble.
+    // Workaround W8 (docs/workarounds.md).
+    @Override
+    protected double computePrefHeight(double width) {
+        if (getWidth() == 0 && getScene() != null && getParent() instanceof Region bubble && bubble.getMaxWidth() > 0) {
+            Insets insets = bubble.getInsets();
+            resize(Math.min(prefWidth(-1), bubble.getMaxWidth() - insets.getLeft() - insets.getRight()), 0);
+            layout();
+        }
+        return super.computePrefHeight(width);
     }
 
     private static double indent(TextLine line) {

@@ -19,7 +19,7 @@ import org.jabref.chatpane.FindMatch;
 /// The mouse wheel over a bubble scrolls the list by itself: a body as tall as its text passes
 /// wheel events on. (The `TextArea` bodies before did not; the filter that fixed it, W2 in
 /// docs/workarounds.md, went with them.)
-// [impl->dsn~bubble-view~3]
+// [impl->dsn~bubble-view~4]
 final class BubbleView implements ConversationView {
 
     private final ObservableList<ChatMessage> items = FXCollections.observableArrayList();
@@ -69,6 +69,23 @@ final class BubbleView implements ConversationView {
         }
         if (index == items.size() - 1) {
             followEnd();
+        }
+    }
+
+    /// Removes the items in place, without following: a deleted message is no reason to jump to the
+    /// end. The successor's cell is built again if it now continues a group, or no longer does.
+    @Override
+    public void removed(List<ChatMessage> messages, int from) {
+        int to = from + items.size() - messages.size();
+        ChatMessage lastRemoved = items.get(to - 1);
+        skin.flow().removing(from, to - from);
+        items.remove(from, to);
+        if (from < items.size()) {
+            ChatMessage next = items.get(from);
+            @Nullable ChatMessage previous = from > 0 ? items.get(from - 1) : null;
+            if (MessageGrouping.continuesGroup(lastRemoved, next) != MessageGrouping.continuesGroup(previous, next)) {
+                items.set(from, next);
+            }
         }
     }
 
