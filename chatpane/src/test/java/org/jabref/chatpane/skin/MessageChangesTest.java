@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// [utest->dsn~message-changes~2]
+// [utest->dsn~message-changes~3]
 class MessageChangesTest {
 
     /// What [MessageChanges#appendedFrom] says about the change `edit` makes to `a, b, c`.
@@ -53,6 +53,18 @@ class MessageChangesTest {
         assertThat(classify(list -> list.add("d"), MessageChanges::replacedAt)).isEqualTo(MessageChanges.NOT_AN_APPEND);
         assertThat(classify(list -> list.remove(1), MessageChanges::replacedAt)).isEqualTo(MessageChanges.NOT_AN_APPEND);
         assertThat(classify(list -> list.setAll("x", "y", "z"), MessageChanges::replacedAt)).isEqualTo(MessageChanges.NOT_AN_APPEND);
+    }
+
+    @Test
+    void oneRunOfRemovedMessagesIsFoundByIndex() {
+        assertThat(classify(list -> list.remove(1), MessageChanges::removedFrom)).isEqualTo(1);
+        assertThat(classify(list -> list.removeLast(), MessageChanges::removedFrom)).isEqualTo(2);
+        assertThat(classify(list -> list.remove(0, 2), MessageChanges::removedFrom)).isEqualTo(0);
+        assertThat(classify(list -> list.removeIf("b"::equals), MessageChanges::removedFrom)).isEqualTo(1);
+        assertThat(classify(list -> list.removeAll("a", "c"), MessageChanges::removedFrom)).as("two runs")
+                .isEqualTo(MessageChanges.NOT_AN_APPEND);
+        assertThat(classify(list -> list.set(1, "B"), MessageChanges::removedFrom)).isEqualTo(MessageChanges.NOT_AN_APPEND);
+        assertThat(classify(list -> list.add("d"), MessageChanges::removedFrom)).isEqualTo(MessageChanges.NOT_AN_APPEND);
     }
 
     @Test

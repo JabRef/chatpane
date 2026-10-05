@@ -4,6 +4,8 @@ Code that exists only because something upstream (JavaFX, a library, a tool) doe
 Each entry says where the workaround lives, what upstream does, which upstream issue tracks it, and how to tell that it can go.
 In code, every workaround carries a `Workaround W<n>` marker naming its entry here, so `git grep "Workaround W3"` finds all of it; `scripts/consistency.sh` checks that markers and entries match.
 
+What to report upstream — these bugs, others without a workaround, and feature requests — is collected in [upstream.md](upstream.md).
+
 When upstream fixes one: remove the code at every marker, delete the entry (the number is not reused), and note it in `CHANGELOG.md` if behavior changes.
 
 ## Removed
@@ -52,3 +54,23 @@ When upstream fixes one: remove the code at every marker, delete the entry (the 
 * **Upstream:** the area turns a segment's style names into styles when it builds the text cell (`VFlow.resolveStyles` measures a probe `Text`) and keeps the cell. A later CSS change — another theme, a stylesheet added — does not reach built cells (standalone check: a segment named `tinted` stayed red after the stylesheet switched `.tinted` to blue), and cells built before the pane's CSS was in place keep the defaults (Carl, 2026-09-22: the transcript "shows initially without styling" until the renderer is switched, which builds a new model).
   No upstream issue found.
 * **Removable when:** the area re-resolves styles on CSS changes itself; check: `TranscriptStylingUiTest` passes with the probe's callback doing nothing.
+
+## W8 — RichTextArea knows its content height only after its own layout
+
+* **Where:** `BubbleText.computePrefHeight`.
+* **Upstream:** with `useContentHeight`, the area's preferred height comes from the arrangement its `VFlow` builds in `layoutChildren`; before that first layout it reports `Params.LAYOUT_MIN_HEIGHT` plus insets (26 px in the probe), and once laid out it sets its preferred height and asks for another layout — a pulse later.
+  The bubble list measures a fresh cell before its body ever laid out, and a growing answer builds its cell anew with every word: the newest bubble shrank to one line for a frame and grew back (66 px), so the whole list jumped by the difference with every word (Carl, 2026-10-05: "the scroll jumps crazy").
+  The body therefore lays itself out at its preferred width within the bubble before it reports its height — the width is `-1` there, the area has no content bias.
+  No upstream issue found; related: [JDK-8310593](https://bugs.openjdk.org/browse/JDK-8310593) (useContentWidth/Height for scrollable controls).
+* **Removable when:** a fresh `RichTextArea` with `useContentHeight` reports its content height before its first layout; then the override goes.
+  Check: `FollowNewestUiTest.bubblesDoNotShrinkWhileTheNewestGrows`.
+
+## W9 — RichTextArea scrolls to a caret that an edit elsewhere moved
+
+* **Where:** `TranscriptView.removed`.
+* **Upstream:** the selection model holds its caret as a model marker; an edit above the caret shifts the marker, the area sees a selection change, and `VFlow.handleSelectionChange` calls `scrollCaretToVisible()` — as if the user had moved the caret.
+  Following the newest message parks the hidden caret at the end of the transcript, so deleting any message the user looks at scrolled the view to the end (Carl, 2026-10-05: "in irc and modern it still jumps to the end on delete").
+  Without a selection, the view therefore clears the caret before it removes; the next follow puts it back.
+  No upstream issue found.
+* **Removable when:** a caret moved only by a model edit no longer scrolls the area; then `removed` stops clearing it.
+  Check: `FollowNewestUiTest.transcriptStaysWhenAMessageIsDeleted` with the `clearSelection()` call removed.

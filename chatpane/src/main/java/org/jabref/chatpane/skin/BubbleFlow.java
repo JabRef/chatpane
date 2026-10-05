@@ -1,5 +1,6 @@
 package org.jabref.chatpane.skin;
 
+import javafx.scene.control.IndexedCell;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.skin.ListViewSkin;
@@ -18,7 +19,10 @@ import org.jabref.chatpane.ChatMessage;
 ///
 /// Any position change outside a layout pass is the user's (wheel, scroll bar, keys): it unpins
 /// the flow unless it ends at the very end, which pins it again, as chat clients do.
-// [impl->dsn~bubble-view~3]
+///
+/// Unpinned, the position as a fraction would also move the view when messages above it are
+/// removed: [#removing(int, int)] keeps the top message where it is instead.
+// [impl->dsn~bubble-view~4]
 final class BubbleFlow extends VirtualFlow<ListCell<ChatMessage>> {
 
     /// At or past this position the flow is at the end; positions are fractions of the content.
@@ -30,6 +34,10 @@ final class BubbleFlow extends VirtualFlow<ListCell<ChatMessage>> {
 
     private boolean following = true;
     private boolean inLayout;
+
+    /// The cell to put at the top in the next layout, and its offset there; `-1` for none.
+    private int anchorIndex = -1;
+    private double anchorOffset;
 
     BubbleFlow() {
         positionProperty().addListener((_, _, position) -> {
@@ -50,11 +58,41 @@ final class BubbleFlow extends VirtualFlow<ListCell<ChatMessage>> {
         following = false;
     }
 
+    /// Keeps the top message where it is while `count` items from `from` are removed: called before
+    /// the removal, it takes effect in the next layout. Pinned to the end, the flow stays there.
+    void removing(int from, int count) {
+        IndexedCell<?> top = getFirstVisibleCell();
+        if (following || top == null) {
+            return;
+        }
+        int index = top.getIndex();
+        double offset = top.getLayoutY();
+        if (index >= from + count) {
+            index -= count;
+        } else if (index >= from) {
+            // The top message itself goes: its successor takes its place.
+            offset = 0;
+            index = from;
+        }
+        anchorIndex = index;
+        anchorOffset = offset;
+        requestLayout();
+    }
+
     @Override
     protected void layoutChildren() {
         inLayout = true;
         try {
             super.layoutChildren();
+            if (anchorIndex >= 0) {
+                if (!following && anchorIndex < getCellCount()) {
+                    // scrollToTop piles the cells; scrollPixels moves laid-out ones.
+                    scrollToTop(anchorIndex);
+                    super.layoutChildren();
+                    scrollPixels(-anchorOffset);
+                }
+                anchorIndex = -1;
+            }
             for (int pass = 0; following && getCellCount() > 0 && getPosition() < END && pass < MAX_REPINS; pass++) {
                 setPosition(1);
                 super.layoutChildren();

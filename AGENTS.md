@@ -59,6 +59,7 @@
   Expose state as pseudo-classes and structure as style classes so applications restyle with ordinary selectors; keep standard classes (`list-cell`, `label`) on standard nodes.
   The demo (an application) may define a theme for itself; the library never does.
 * Workarounds: code that exists only because something upstream (JavaFX, a library, a tool) falls short gets a `Workaround W<n> (docs/workarounds.md)` comment at every place it touches and an entry in `docs/workarounds.md`: where, what upstream does, the upstream issue (link, or "none found"), and how to tell it can be removed.
+  What to report upstream — the bug behind a workaround, an upstream bug without one, a missing feature (the `RichTextArea` maintainer takes reasonable requests) — goes into `docs/upstream.md` with a reproduction or use case.
   Search the upstream tracker (bugs.openjdk.org for JavaFX) before writing "none found".
   `scripts/consistency.sh` checks markers against entries; a removed workaround moves to the *Removed* list with the date, and its number is not reused.
 * Incubator: every layout renders text with `jfx.incubator.richtext` (the transcript, MADR 0010; bubble bodies, MADR 0011) — consumers accept the incubator status.

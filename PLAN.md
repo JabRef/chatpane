@@ -9,6 +9,13 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-10-05* — **Bubble list jitter while an answer grows; delete keeps the place.**
+Carl: "still a bug: when adding a new text in bubble mode the scroll jumps crazy", then "and when i delete a message, the scroll bar jumps to bottom".
+Growth: the end stayed pinned (the earlier fix held), but a frame-by-frame probe showed the newest bubble at 26 px for one frame after every word, then its real 66 px — the list jumped by the difference each time.
+A growing answer builds its cell anew per word, and a fresh `RichTextArea` knows its content height only after its own `VFlow.layoutChildren`; it is measured before that, with width `-1`. `BubbleText.computePrefHeight` now lays a fresh body out at its width first (Workaround W8); 0 jumps in the probe. Test: `bubblesDoNotShrinkWhileTheNewestGrows` (red before).
+Delete: a removal was "anything else", so the view rebuilt and followed to the end (in IRC and modern also after the first fix: following parks the hidden caret at the end, a removal above moves it, and the area scrolls a moved caret into view — the view now drops a collapsed caret before removing; Carl caught it in the demo, `transcriptStaysWhenAMessageIsDeleted` wheels up like a user; W9).
+A removal *above* the shown lines still moves the transcript: `VFlow.computeNewOrigin` adds removed lines instead of subtracting them; compensating via the caret proved unreliable, so no workaround — U1 in the new `docs/upstream.md`, which Carl asked for: every upstream bug and missing `RichTextArea` feature collected for reporting (the maintainer takes reasonable requests). Now `MessageChanges.removedFrom` → `ConversationView.removed`: bubbles remove in place, `BubbleFlow.removing` keeps the top message at its offset (the flow's fractional position shifted it otherwise); the transcript removes the paragraphs in place (`TranscriptModel.remove`, successor regrouped in the same change event).
+
 *2026-10-05* — **Bubble scroll flicker fixed.**
 Carl: "If a text in bubbles is added and the pane is to small, the scrolling goes crazy, flickering between showing the next bubble and not showing in high speed".
 Cause: a new or grown bubble knows its height a pulse after the list scrolled to it, and the `VirtualFlow` keeps its position as a fraction — the newest bubble slid 40 px out of view after every word, then the next word's scroll brought it back. A headless probe counted 65 of 129 rendered frames cut off; the old second `scrollTo` on the next pulse came one pulse too early.

@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// Message actions (context menu and hover buttons in every layout, all following the action's
 /// properties), status, and a message replaced in place as a generated answer grows.
 // [utest->dsn~message-actions~4]
-// [utest->dsn~conversation-views~4]
+// [utest->dsn~conversation-views~5]
 @FxTestApplication(MessageActionsUiTest.TestApp.class)
 class MessageActionsUiTest {
 

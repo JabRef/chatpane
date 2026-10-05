@@ -12,12 +12,14 @@ import org.jabref.chatpane.FindMatch;
 ///
 /// The skin keeps one view per layout and shows one at a time. Only the shown view tracks the
 /// messages: [#show(List)] builds it from the current messages, [#hide()] lets go of them, and in
-/// between the skin reports each change as [#appended(List, int)], [#updated(List, int)] or
-/// [#replaced(List)]; find matches as [#findChanged()] and [#reveal(FindMatch)].
+/// between the skin reports each change as [#appended(List, int)], [#updated(List, int)],
+/// [#removed(List, int)] or [#replaced(List)]; find matches as [#findChanged()] and
+/// [#reveal(FindMatch)].
 ///
 /// Every view follows the newest message the same way: after a change it scrolls to the end,
 /// unless the user has text selected in it — a selection is never lost to an incoming message.
-// [impl->dsn~conversation-views~4]
+/// A removal is not news: it leaves the view where it is.
+// [impl->dsn~conversation-views~5]
 interface ConversationView {
 
     /// The node the skin puts on screen while this view is shown.
@@ -35,6 +37,10 @@ interface ConversationView {
     /// The message at `index` was replaced by another — typically the same message grown or with
     /// a new status; the view updates it in place (or re-renders, if it cannot).
     void updated(List<ChatMessage> messages, int index);
+
+    /// Messages were removed from the view's list, the first of them at index `from`; `messages` is
+    /// the whole new list, as many messages shorter as were removed. The view keeps its place.
+    void removed(List<ChatMessage> messages, int from);
 
     /// The styles the text is drawn with changed (theme, stylesheet, font): draw it again.
     void restyle();

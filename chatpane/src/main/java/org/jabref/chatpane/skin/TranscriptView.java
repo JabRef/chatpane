@@ -18,7 +18,7 @@ import org.jabref.chatpane.FindMatch;
 /// the whole conversation as a [TranscriptModel] (MADR 0010), so a selection can run across
 /// messages and copies as a plain-text log. The [TranscriptFormat] decides how a message reads;
 /// [TranscriptActions] puts the message actions at the right of the line under the pointer.
-// [impl->dsn~transcript-view~5]
+// [impl->dsn~transcript-view~6]
 final class TranscriptView implements ConversationView {
 
     private final RichTextArea area = new RichTextArea();
@@ -75,6 +75,23 @@ final class TranscriptView implements ConversationView {
             if (index == messages.size() - 1) {
                 followEnd();
             }
+            actions.update();
+        } else {
+            replaced(messages);
+        }
+    }
+
+    /// Removes the messages' paragraphs in place, without following: a deleted message is no reason
+    /// to jump to the end. Following parks the hidden caret at the end; a removal above it moves it,
+    /// and the area scrolls a moved caret into view — so without a selection the caret goes first.
+    /// (A removal above the shown lines still moves the view: upstream bug U1 in docs/upstream.md.)
+    @Override
+    public void removed(List<ChatMessage> messages, int from) {
+        if (!hasSelection()) {
+            // Workaround W9 (docs/workarounds.md).
+            area.clearSelection();
+        }
+        if (area.getModel() instanceof TranscriptModel model && model.remove(messages, from)) {
             actions.update();
         } else {
             replaced(messages);

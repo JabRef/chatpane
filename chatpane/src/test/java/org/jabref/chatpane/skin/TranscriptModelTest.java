@@ -16,7 +16,7 @@ import org.jabref.chatpane.MessageRenderer;
 import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
 import static org.assertj.core.api.Assertions.assertThat;
 
-// [utest->dsn~transcript-model~4]
+// [utest->dsn~transcript-model~5]
 class TranscriptModelTest {
 
     private static final Instant T0 = Instant.parse("2026-09-22T10:00:00Z");
@@ -170,6 +170,67 @@ class TranscriptModelTest {
         all.set(0, new ChatMessage("alice", "first", T0, INCOMING));
         assertThat(model.update(all, 0)).as("bob's second message now starts a group of its own").isFalse();
         assertThat(lines(model)).as("unchanged").containsExactly("bob  10:00", "first", "second");
+    }
+
+    @Test
+    void removeDropsWholeLinesInPlace() {
+        List<ChatMessage> all = new ArrayList<>(messages("one", "two\nlines", "three"));
+        TranscriptModel model = new TranscriptModel(new CountingFormat(), all);
+        List<ContentChange> changes = recordChanges(model);
+        ChatMessage three = all.get(2);
+        all.remove(1);
+        assertThat(model.remove(all, 1)).isTrue();
+        assertThat(lines(model)).containsExactly("10:00 <bob> one", "10:00 <bob> three");
+        assertThat(changes).singleElement().satisfies(change -> {
+            assertThat(position(change.getStart())).containsExactly(1, 0);
+            assertThat(position(change.getEnd())).containsExactly(3, 0);
+            assertThat(change.getLinesAdded()).isZero();
+        });
+        assertThat(model.messageAt(TextPos.ofLeading(1, 0))).isEqualTo(three);
+    }
+
+    @Test
+    void removingTheTailLeavesNoEmptyLine() {
+        List<ChatMessage> all = new ArrayList<>(messages("one", "two", "three"));
+        TranscriptModel model = new TranscriptModel(new CountingFormat(), all);
+        List<ContentChange> changes = recordChanges(model);
+        all.subList(1, 3).clear();
+        assertThat(model.remove(all, 1)).isTrue();
+        assertThat(lines(model)).containsExactly("10:00 <bob> one");
+        assertThat(changes).singleElement().satisfies(change -> {
+            assertThat(position(change.getStart())).containsExactly(0, "10:00 <bob> one".length());
+            assertThat(position(change.getEnd())).containsExactly(2, "10:00 <bob> three".length());
+        });
+    }
+
+    @Test
+    void removeRegroupsTheSuccessor() {
+        List<ChatMessage> all = new ArrayList<>(List.of(
+                new ChatMessage("bob", "first", T0, INCOMING),
+                new ChatMessage("alice", "between", T0.plusSeconds(5), INCOMING),
+                new ChatMessage("bob", "second", T0.plusSeconds(10), INCOMING),
+                new ChatMessage("carol", "third", T0.plusSeconds(15), INCOMING)));
+        TranscriptModel model = new TranscriptModel(new ModernTranscript(TranscriptFormatTest.PLAIN), all);
+        List<ContentChange> changes = recordChanges(model);
+        all.remove(1);
+        assertThat(model.remove(all, 1)).isTrue();
+        assertThat(lines(model)).as("bob's second message now continues his group")
+                .containsExactly("bob  10:00", "first", "second", "carol  10:00", "third");
+        assertThat(changes).singleElement().satisfies(change -> {
+            assertThat(position(change.getStart())).containsExactly(2, 0);
+            assertThat(position(change.getEnd())).containsExactly(5, "second".length());
+            assertThat(change.getLinesAdded()).isZero();
+        });
+        assertThat(model.messageAt(TextPos.ofLeading(4, 0))).isEqualTo(all.get(2));
+    }
+
+    @Test
+    void removingEveryMessageAsksForARebuild() {
+        List<ChatMessage> all = new ArrayList<>(messages("one"));
+        TranscriptModel model = new TranscriptModel(new CountingFormat(), all);
+        all.clear();
+        assertThat(model.remove(all, 0)).isFalse();
+        assertThat(lines(model)).as("unchanged").containsExactly("10:00 <bob> one");
     }
 
     @Test
