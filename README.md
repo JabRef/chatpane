@@ -32,7 +32,7 @@ chat.setMessageLayout(MessageLayout.BUBBLES);
 chat.setTimeFormatter(DateTimeFormatter.ofPattern("HH:mm")); // optional; default: the locale's short time
 chat.setMessageRenderer(MessageRenderer.markdown());          // optional; default: plain text
 chat.setLinkHandler(url -> hostServices.showDocument(url));    // optional; without it, links are inert
-chat.getMessageActions().add(MessageAction.of("Delete", m -> chat.getMessages().removeIf(x -> x == m)));
+chat.getMessageActions().add(new MessageAction("Delete", m -> chat.getMessages().removeIf(x -> x == m)));
 chat.setTextLocalizer(Localization::lang);                     // optional; the pane's own texts, see below
 
 // A generated answer: pending, growing in place, then sent (or Status.ERROR).
@@ -60,7 +60,8 @@ A highlighter that throws, or whose tokens do not add up to the code, leaves the
 An application can plug in its own renderer; it returns the library's small `TextLine`/`TextSpan` model, which every layout shows alike ([MADR 0011](docs/decisions/0011-message-renderer-hook-with-commonmark.md)).
 
 Replacing one message (`set(index, …)`) updates it in place in every layout: the rest of the conversation, the scroll position and the user's selection stay.
-Message actions appear in the message's context menu (after *Copy* and *Select All*, which every message text has) and, in `BUBBLES`, as buttons next to the bubble under the pointer; `MessageAction.onlyFor(…)` limits one to the messages it fits, e.g. *Retry* to failed ones.
+Message actions appear in the message's context menu (after *Copy* and *Select All*, which every message text has) and, in `BUBBLES`, as buttons next to the bubble under the pointer; a predicate in the constructor limits one to the messages it fits, e.g. *Retry* to failed ones.
+Like a `MenuItem`, an action has properties — `text`, `graphic`, `disable`, `visible`, `getStyleClass()` — and its menu items and buttons follow them while shown, e.g. `retry.disableProperty().bind(busy)`.
 The pane shows two texts of its own, `ChatPane.TEXT_COPY` ("Copy") and `ChatPane.TEXT_SELECT_ALL` ("Select All"); the text localizer gets the English text and returns what to show.
 `ChatMessage.Status` is `SENT`, `PENDING` or `ERROR`: the pane marks pending and failed messages without a color of its own (dimmed, italic, a dashed outline) — color them in CSS if you want.
 
@@ -93,8 +94,8 @@ Text in both is drawn by `RichTextArea` from style names: write rules for the na
 | `.message-bubble` | the bubble | sets `-fx-background` (`-fx-base`, `-fx-accent` when outgoing); its labels ladder their text color against it |
 | `.message-sender`, `.message-time` | the labels in a bubble | also standard `.label`s |
 | `.message-body` | the body in a bubble | a read-only standard `.rich-text-area`, flattened to text — selection, *Copy* and the context menu work as everywhere in JavaFX |
-| `.message-actions`, `.message-action` | the box of action buttons next to a bubble, and each button | standard `.button`s; shown while the pointer is over the row |
-| `.message-menu` | the context menu of message text | a standard `.context-menu`; the action items carry `.message-action` |
+| `.message-actions`, `.message-action` | the box of action buttons next to a bubble, and each button | standard `.button`s; shown while the pointer is over the row; each also carries its action's `getStyleClass()` |
+| `.message-menu` | the context menu of message text | a standard `.context-menu`; the action items carry `.message-action` and their action's `getStyleClass()` |
 | `.chat-pane-transcript` | the `RichTextArea` (`IRC`, `MODERN`) | also a standard `.rich-text-area`; its content padding is set here (wrapping and caret are fixed in code: CSS that sets them again breaks the incubator area, `docs/workarounds.md` W6) |
 | `.find-match` | the highlight under a find match | a `Path`: style it with `-fx-fill` and `-fx-opacity` (keep `-fx-stroke-width: 0`); `.find-current` too on the current match |
 | `.style-probe` | an invisible `Label` in the skin | its background lists the lookups the text uses; when CSS changes them, the text is redrawn — if you restyle the text from other lookups, add them here |

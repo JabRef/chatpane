@@ -17,7 +17,7 @@ import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
 /// A pretend assistant, the way an AI chat (JabRef's) answers: a pending message that grows word by
 /// word — each step replaces the message in the list, which the pane updates in place — and ends
 /// sent, or failed if the question contains "fail".
-// [impl->dsn~demo-app~3]
+// [impl->dsn~demo-app~4]
 final class DemoResponder {
 
     static final String NAME = "assistant";

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
@@ -35,10 +34,11 @@ import org.jabref.chatpane.MessageAction;
 /// Pseudo-classes on the cell: `:outgoing` or `:incoming`; `:sent`, `:pending` or `:error`; and
 /// `:continued` for a message that continues its sender's group (no sender name).
 /// The pane's [MessageAction]s for the message sit as `message-action` buttons in a
-/// `message-actions` box on the inner side of the bubble, shown while the pointer is over the row;
+/// `message-actions` box on the inner side of the bubble, shown while the pointer is over the row
+/// and following the actions' properties ([ActionControls]);
 /// the time label's tooltip gives date and time in full.
 // [impl->dsn~message-cell-bubbles~3]
-// [impl->dsn~message-actions~2]
+// [impl->dsn~message-actions~3]
 final class MessageCell extends ListCell<ChatMessage> {
 
     private static final PseudoClass CONTINUED = PseudoClass.getPseudoClass("continued");
@@ -126,18 +126,7 @@ final class MessageCell extends ListCell<ChatMessage> {
         buttons.getStyleClass().add("message-actions");
         buttons.setAlignment(Pos.CENTER);
         for (MessageAction action : actions) {
-            Button button = new Button();
-            button.getStyleClass().add("message-action");
-            var graphic = action.graphic();
-            if (graphic != null) {
-                button.setGraphic(graphic.get());
-                button.setTooltip(new Tooltip(action.text()));
-            } else {
-                button.setText(action.text());
-            }
-            button.setFocusTraversable(false);
-            button.setOnAction(_ -> action.onAction().accept(message));
-            buttons.getChildren().add(button);
+            buttons.getChildren().add(ActionControls.button(action, message));
         }
         return buttons;
     }

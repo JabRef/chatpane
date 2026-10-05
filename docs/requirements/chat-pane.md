@@ -334,11 +334,14 @@ Covers:
 Needs: impl, utest
 
 ### Message actions (design)
-`dsn~message-actions~2`
+`dsn~message-actions~3`
 
-A `MessageAction` (public record) has a text, an optional graphic supplier (a fresh node per use), an `appliesTo` predicate and an `onAction` consumer that gets the message instance.
+A `MessageAction` (public final class, like a `MenuItem` a description the skin makes controls from) has the JavaFX properties `text`, `graphic` (a supplier: a fresh node per control), `disable` and `visible`, an observable style-class list, and the final `appliesTo` predicate and `onAction` consumer that gets the message instance.
+`appliesTo` is asked whenever a message is shown and looks at the message alone (a message changes only by being replaced); state outside the message goes into `disable` or `visible`.
+`ActionControls` binds every menu item and button to its action, so a change shows at once without re-rendering: the text, the graphic (made anew when the supplier changes), greyed out while `disable`, gone without a gap while not `visible` (the menu's separator too when no action is visible), and `message-action` plus the action's style classes.
+The bindings observe the action weakly, so a long-lived action keeps no closed menu or recycled cell alive.
 `MessageMenu` replaces the areas' default context menu — in the transcript and in every bubble body alike — with *Copy* (disabled without a selection), *Select All*, and, after a separator, the pane's actions that apply to the message under the pointer (the transcript finds it through `TranscriptModel.messageAt`).
-In bubbles, the same actions are also `message-action` buttons in a `message-actions` box on the inner side of the bubble (as in JabRef's AI chat), laid out always and shown while the pointer is over the cell, so the bubble does not jump; a graphic makes the text a tooltip.
+In bubbles, the same actions are also `message-action` buttons in a `message-actions` box on the inner side of the bubble (as in JabRef's AI chat), laid out always and shown while the pointer is over the cell, so the bubble does not jump; with a graphic, the button shows the graphic only and the text as a tooltip, keeping the text set for screen readers.
 The menu texts *Copy* and *Select All* go through the pane's text localizer (`dsn~chat-pane-control~5`); action texts are the application's own.
 
 Covers:
@@ -352,7 +355,7 @@ Needs: impl, utest
 `dsn~transcript-view~5`
 
 `TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~5`); the model is the area's own, no second reference is kept.
-`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu` (`dsn~message-actions~2`).
+`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu` (`dsn~message-actions~3`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
 Following the newest message (`dsn~conversation-views~4`) moves the hidden caret to the end of the document, which scrolls there.

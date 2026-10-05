@@ -19,11 +19,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Markdown message bodies** in every layout: `ChatPane.setMessageRenderer(MessageRenderer.markdown())` — headings, emphasis, code, links, lists, quotes (commonmark-java). Plain text stays the default, and an application can plug in its own renderer.
 - **Clickable links**: `ChatPane.setLinkHandler(…)` is called with a link's target; the demo opens it in the browser.
 - **Demo: plain/Markdown toggle**, and a sample message showing what Markdown does.
-- **Message actions**: `ChatPane.getMessageActions()` — each action in the message's context menu (every layout) and as a button next to a bubble under the pointer, limited to the messages it fits (`onlyFor`).
+- **Message actions**: `ChatPane.getMessageActions()` — each action in the message's context menu (every layout) and as a button next to a bubble under the pointer, limited to the messages it fits. Like a `MenuItem`, an action has properties (`text`, `graphic`, `disable`, `visible`, style classes) that its menu items and buttons follow while shown.
 - **Message status** `SENT`, `PENDING`, `ERROR` (`ChatMessage.Status`), shown without colors of its own and exposed to CSS.
 - **Live updates**: replacing a message updates it in place — a generated answer can grow while the user reads and selects.
 - **Full date and time** as a tooltip on a bubble's time.
-- **Demo: a pretend assistant** answers each message the way an AI chat does, with *Delete* and *Retry*.
+- **Demo: a pretend assistant** answers each message the way an AI chat does, with *Delete* and *Retry*; *Retry* is greyed out while an answer is being written.
 - **Localizable texts**: `ChatPane.setTextLocalizer(…)` translates the pane's own texts (the context menu's *Copy* and *Select All*); JabRef can pass `Localization::lang`.
 - **Time format as a pane property**: `ChatPane.timeFormatterProperty()` sets how times read, in every layout alike.
 - **Find in the conversation**: `ChatPane.setFindQuery(…)` highlights every occurrence in the message texts, in every layout, and scrolls to the current one; `findNext()`/`findPrevious()` step through them. The demo has a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
