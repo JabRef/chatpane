@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// The mouse wheel over a bubble's text scrolls the conversation. With `TextArea` bodies it did
 /// not (their inner ScrollPane consumed every wheel event; W2 in docs/workarounds.md, removed): this test
 /// passes without any filter since the bodies are content-high RichTextAreas.
-// [utest->dsn~bubble-view~2]
+// [utest->dsn~bubble-view~3]
 @FxTestApplication(WheelOverBodyUiTest.TestApp.class)
 class WheelOverBodyUiTest {
 
