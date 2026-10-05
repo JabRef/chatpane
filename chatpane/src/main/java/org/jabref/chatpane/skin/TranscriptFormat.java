@@ -2,6 +2,8 @@ package org.jabref.chatpane.skin;
 
 import java.util.List;
 
+import jfx.incubator.scene.control.richtext.TextPos;
+
 import org.jabref.chatpane.ChatMessage;
 
 /// How one message turns into built paragraphs: [IrcTranscript] and [ModernTranscript] for the
@@ -21,4 +23,10 @@ interface TranscriptFormat {
 
     /// How many paragraphs [#paragraphs] returns for these arguments, without building them.
     int paragraphCount(ChatMessage message, boolean continued);
+
+    /// Where character `offset` of rendered line `line` lands in the [#paragraphs] of `message`:
+    /// the paragraph, counted from the message's first, and the character in it — to reveal a
+    /// find match.
+    // [impl->dsn~find-reveal~1]
+    TextPos locate(ChatMessage message, boolean continued, int line, int offset);
 }

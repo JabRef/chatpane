@@ -19,6 +19,7 @@ import org.jabref.chatpane.TextSpan;
 /// rendered text, the line's kind (`line-paragraph`, `line-heading` plus `line-heading-2`,
 /// `line-quote`, `line-list-item`, `line-code-block`) and the span's styles (`span-bold`,
 /// `span-italic`, `span-code`, `span-strikethrough`, `span-link`).
+/// Find matches are highlights under the text, named `find-match` (plus `find-current`).
 final class TranscriptSegments {
 
     /// Space above a paragraph that starts a group, in pixels (the model's unit).
@@ -63,9 +64,13 @@ final class TranscriptSegments {
     }
 
     /// Adds the spans of `line` to `paragraph`, which already holds `offset` characters (an IRC
-    /// prefix), and returns the links among them.
+    /// prefix), highlights the find matches `found` in it, and returns the links among them.
+    // [impl->dsn~find-highlights~1]
     static List<TranscriptLine.Link> addLine(RichParagraph.Builder paragraph, int offset, TextLine line,
-            ChatMessage message, boolean continued) {
+            ChatMessage message, boolean continued, List<FindHighlights.Range> found) {
+        for (FindHighlights.Range range : found) {
+            paragraph.addHighlight(offset + range.start(), range.end() - range.start(), range.styleNames());
+        }
         List<TranscriptLine.Link> links = new ArrayList<>();
         int position = offset;
         for (TextSpan span : line.spans()) {

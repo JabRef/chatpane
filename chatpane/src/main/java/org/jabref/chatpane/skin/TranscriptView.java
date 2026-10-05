@@ -11,6 +11,7 @@ import jfx.incubator.scene.control.richtext.model.StyledTextModel;
 import jfx.incubator.scene.control.richtext.skin.RichTextAreaSkin;
 
 import org.jabref.chatpane.ChatMessage;
+import org.jabref.chatpane.FindMatch;
 
 /// The [org.jabref.chatpane.MessageLayout#IRC] and
 /// [org.jabref.chatpane.MessageLayout#MODERN] view: one read-only [RichTextArea] holding
@@ -86,6 +87,30 @@ final class TranscriptView implements ConversationView {
     public void restyle() {
         if (area.getSkin() instanceof RichTextAreaSkin skin) {
             skin.refreshLayout();
+        }
+    }
+
+    /// The built paragraphs carry the highlights: build them again, then draw them again.
+    // [impl->dsn~find-highlights~1]
+    @Override
+    public void findChanged() {
+        if (area.getModel() instanceof TranscriptModel model) {
+            model.forgetBuilt();
+            restyle();
+        }
+    }
+
+    /// Selects the match, which scrolls to it — the area has no other public way to scroll — and
+    /// keeps the view from following the newest message away from it, as any selection does.
+    // [impl->dsn~find-reveal~1]
+    @Override
+    public void reveal(FindMatch match) {
+        if (area.getModel() instanceof TranscriptModel model) {
+            TextPos start = model.locate(match.message(), match.line(), match.start());
+            TextPos end = model.locate(match.message(), match.line(), match.end());
+            if (start != null && end != null) {
+                area.select(start, end);
+            }
         }
     }
 

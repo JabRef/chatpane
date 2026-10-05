@@ -20,7 +20,8 @@ import org.jabref.chatpane.TextLine;
 
 /// What every view needs from the pane to render a message, read fresh each time: the time
 /// format and zone, the message renderer, the link handler and the message actions. One object for both views, so they cannot
-/// drift apart in how a message reads (review finding S5).
+/// drift apart in how a message reads (review finding S5). It also carries the find matches to
+/// highlight, which the skin keeps up to date.
 final class RenderContext {
 
     private final Function<Instant, String> time;
@@ -29,6 +30,7 @@ final class RenderContext {
     private final Supplier<List<MessageAction>> actions;
     private final Supplier<ZoneId> zone;
     private final Supplier<UnaryOperator<String>> localizer;
+    private final FindHighlights findHighlights = new FindHighlights();
 
     RenderContext(Function<Instant, String> time, Supplier<MessageRenderer> renderer,
             Supplier<@Nullable Consumer<String>> linkHandler) {
@@ -51,6 +53,16 @@ final class RenderContext {
         return new RenderContext(instant -> pane.getTimeFormatter().format(instant), pane::getMessageRenderer,
                 pane::getLinkHandler, pane::getMessageActions, () -> pane.getTimeFormatter().getZone(),
                 pane::getTextLocalizer);
+    }
+
+    /// The find matches to highlight; the skin updates them, the formats read them.
+    FindHighlights findHighlights() {
+        return findHighlights;
+    }
+
+    /// The find matches in line `line` of `message`.
+    List<FindHighlights.Range> found(ChatMessage message, int line) {
+        return findHighlights.in(message, line);
     }
 
     String time(Instant instant) {

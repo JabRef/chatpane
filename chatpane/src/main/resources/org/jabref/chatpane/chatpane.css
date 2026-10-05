@@ -216,3 +216,24 @@
     -fx-font-size: 0.85em;
     -fx-padding: 0.167em 0.5em;
 }
+
+/*
+ * Find (ChatPane#findQueryProperty): every match is a highlight shape under
+ * the text, the current one stronger; filled like the selection — the
+ * accent, on an outgoing bubble (the accent) the laddered text color. A
+ * Path, unlike a Text, is not resolved once: these rules follow the theme.
+ * Stroke width 0: a Path has a black outline by default.
+ */
+.chat-pane .find-match {
+    -fx-fill: -fx-accent;
+    -fx-opacity: 0.3;
+    -fx-stroke-width: 0;
+}
+
+.chat-pane .message-cell:outgoing .message-bubble .find-match {
+    -fx-fill: -fx-text-background-color;
+}
+
+.chat-pane .find-match.find-current {
+    -fx-opacity: 0.85;
+}

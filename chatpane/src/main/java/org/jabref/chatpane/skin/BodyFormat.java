@@ -3,6 +3,7 @@ package org.jabref.chatpane.skin;
 import java.util.ArrayList;
 import java.util.List;
 
+import jfx.incubator.scene.control.richtext.TextPos;
 import jfx.incubator.scene.control.richtext.model.RichParagraph;
 
 import org.jabref.chatpane.ChatMessage;
@@ -25,12 +26,19 @@ final class BodyFormat implements TranscriptFormat {
     @Override
     public List<TranscriptLine> paragraphs(ChatMessage message, boolean continued) {
         List<TranscriptLine> paragraphs = new ArrayList<>();
-        for (TextLine line : context.lines(message)) {
+        List<TextLine> lines = context.lines(message);
+        for (int i = 0; i < lines.size(); i++) {
+            TextLine line = lines.get(i);
             RichParagraph.Builder paragraph = paragraphFor(line, false);
-            List<TranscriptLine.Link> links = addLine(paragraph, 0, line, message, continued);
+            List<TranscriptLine.Link> links = addLine(paragraph, 0, line, message, continued, context.found(message, i));
             paragraphs.add(new TranscriptLine(paragraph.build(), links));
         }
         return paragraphs;
+    }
+
+    @Override
+    public TextPos locate(ChatMessage message, boolean continued, int line, int offset) {
+        return TextPos.ofLeading(line, offset);
     }
 
     @Override

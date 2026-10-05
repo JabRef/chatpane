@@ -4,6 +4,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.SkinBase;
 
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FindMatch;
 import org.jabref.chatpane.MessageLayout;
 
 /// Default skin of [ChatPane]. It holds one [ConversationView] per [MessageLayout] and shows the
@@ -43,9 +45,15 @@ public final class ChatPaneSkin extends SkinBase<ChatPane> {
 
     private final StyleProbe probe = new StyleProbe(this::restyle);
 
+    private final RenderContext context;
+
+    /// A find update is scheduled ([#findChanged(boolean)]); with a scroll to the current match.
+    private boolean findPending;
+    private boolean revealPending;
+
     public ChatPaneSkin(ChatPane control) {
         super(control);
-        RenderContext context = RenderContext.of(control);
+        context = RenderContext.of(control);
         views.put(MessageLayout.BUBBLES, new BubbleView(context));
         views.put(MessageLayout.IRC, new TranscriptView(new IrcTranscript(context), context));
         views.put(MessageLayout.MODERN, new TranscriptView(new ModernTranscript(context), context));
@@ -57,6 +65,11 @@ public final class ChatPaneSkin extends SkinBase<ChatPane> {
         // The bubbles' action buttons are built with the cells.
         registerListChangeListener(control.getMessageActions(), _ -> rerender());
         registerListChangeListener(control.getMessages(), this::messagesChanged);
+        registerListChangeListener(control.getFindMatches(), _ -> findChanged(false));
+        registerChangeListener(control.findIndexProperty(), _ -> findChanged(true));
+        // A new query whose first match has the index of the old current one changes no index.
+        registerChangeListener(control.findQueryProperty(), _ -> findChanged(true));
+        updateFindHighlights();
         showLayout();
     }
 
@@ -69,6 +82,42 @@ public final class ChatPaneSkin extends SkinBase<ChatPane> {
             shown = null;
         }
         super.dispose();
+    }
+
+    /// Highlights the matches again and, on a new current match or query, scrolls to it; matches
+    /// that only moved with the messages (an answer growing) do not scroll.
+    ///
+    /// Later, once per pulse: one query change changes the matches, the index and the query —
+    /// three redraws otherwise; and the pane finds a new message before the views have it.
+    // [impl->dsn~find-highlights~1]
+    // [impl->dsn~find-reveal~1]
+    private void findChanged(boolean reveal) {
+        revealPending |= reveal;
+        if (!findPending) {
+            findPending = true;
+            Platform.runLater(this::applyFind);
+        }
+    }
+
+    private void applyFind() {
+        boolean reveal = revealPending;
+        findPending = false;
+        revealPending = false;
+        if (shown == null) {
+            // Disposed meanwhile.
+            return;
+        }
+        updateFindHighlights();
+        shown.findChanged();
+        FindMatch current = getSkinnable().getCurrentFindMatch();
+        if (reveal && current != null) {
+            shown.reveal(current);
+        }
+    }
+
+    private void updateFindHighlights() {
+        ChatPane pane = getSkinnable();
+        context.findHighlights().update(pane.getMessages(), pane.getFindMatches(), pane.getCurrentFindMatch());
     }
 
     private void showLayout() {

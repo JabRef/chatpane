@@ -34,6 +34,17 @@ Covers:
 
 Needs: dsn
 
+### Find in the demo
+`req~demo-find~1`
+
+A developer can try the pane's find in the demo, with the keys a user expects.
+
+Covers:
+- feat~demo-application~1
+- feat~find-in-conversation~1
+
+Needs: dsn
+
 ### Runs on the module path
 `req~demo-module-path~1`
 
@@ -60,6 +71,17 @@ Covers:
 - req~demo-layouts~1
 - req~demo-module-path~1
 - req~demo-assistant~1
+
+Needs: impl
+
+### Find bar
+`dsn~demo-find-bar~1`
+
+Below the toggles, hidden until <kbd>Ctrl</kbd> + <kbd>F</kbd> (`Shortcut+F`, a scene accelerator): `find-bar` with the query field `find-input` (bound both ways to the pane's `findQuery`), the count `find-count` (`current/total`), *Previous*, *Next* and *Close*.
+In the field <kbd>Enter</kbd> finds the next match, <kbd>Shift</kbd> + <kbd>Enter</kbd> the previous one; <kbd>Esc</kbd> and *Close* hide the bar and clear the query.
+
+Covers:
+- req~demo-find~1
 
 Needs: impl
 

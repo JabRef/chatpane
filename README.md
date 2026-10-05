@@ -61,6 +61,18 @@ Message actions appear in the message's context menu (after *Copy* and *Select A
 The pane shows two texts of its own, `ChatPane.TEXT_COPY` ("Copy") and `ChatPane.TEXT_SELECT_ALL` ("Select All"); the text localizer gets the English text and returns what to show.
 `ChatMessage.Status` is `SENT`, `PENDING` or `ERROR`: the pane marks pending and failed messages without a color of its own (dimmed, italic, a dashed outline) — color them in CSS if you want.
 
+Find in the conversation: set `findQuery` and the pane highlights every occurrence in the rendered message texts (literal, ignoring case) in every layout, and scrolls to the current one; `findNext()` and `findPrevious()` step through them (wrapping around), `getFindMatches()` and `findIndex` tell what was found, kept up to date while messages change.
+The find bar and its keys are the application's, like the input line:
+
+```java
+findField.textProperty().bindBidirectional(chat.findQueryProperty());
+findField.setOnAction(_ -> chat.findNext());
+countLabel.textProperty().bind(Bindings.createStringBinding(
+        () -> (chat.getFindIndex() + 1) + "/" + chat.getFindMatches().size(), chat.findIndexProperty(), chat.getFindMatches()));
+```
+
+In `IRC` and `MODERN` the current match is also selected (which is how the transcript scrolls to it), so it copies like any selection; in `BUBBLES` its bubble scrolls to the top.
+
 The library logs through the SLF4J API ([MADR 0005](docs/decisions/0005-slf4j-api-with-tinylog-backend.md)); its messages land in whatever SLF4J backend the application uses.
 
 ## CSS reference
@@ -81,6 +93,7 @@ Text in both is drawn by `RichTextArea` from style names: write rules for the na
 | `.message-actions`, `.message-action` | the box of action buttons next to a bubble, and each button | standard `.button`s; shown while the pointer is over the row |
 | `.message-menu` | the context menu of message text | a standard `.context-menu`; the action items carry `.message-action` |
 | `.chat-pane-transcript` | the `RichTextArea` (`IRC`, `MODERN`) | also a standard `.rich-text-area`; its content padding is set here (wrapping and caret are fixed in code: CSS that sets them again breaks the incubator area, `docs/workarounds.md` W6) |
+| `.find-match` | the highlight under a find match | a `Path`: style it with `-fx-fill` and `-fx-opacity` (keep `-fx-stroke-width: 0`); `.find-current` too on the current match |
 | `.style-probe` | an invisible `Label` in the skin | its background lists the lookups the text uses; when CSS changes them, the text is redrawn — if you restyle the text from other lookups, add them here |
 
 Style names of the text (transcript and bubble bodies alike):
@@ -129,7 +142,7 @@ The library does not pick JavaFX's platform jars; the application does, as for a
 gradlew :demo:run
 ```
 
-opens a sample conversation with toggles for the layout and the text format (top left), a light/dark/system theme toggle (top right) and an input line; a pretend assistant answers every message the way an AI chat does (pending, growing in place, then sent — or failed if you write "fail", with *Retry*); `gradlew :demo:run --args="--layout=bubbles --theme=dark"` (or `just demo --layout=bubbles --theme=dark`) starts in a given layout and theme.
+opens a sample conversation with toggles for the layout and the text format (top left), a light/dark/system theme toggle (top right) and an input line; <kbd>Ctrl</kbd> + <kbd>F</kbd> opens a find bar above the conversation (<kbd>Enter</kbd> / <kbd>Shift</kbd> + <kbd>Enter</kbd> step through the matches, <kbd>Esc</kbd> closes it); a pretend assistant answers every message the way an AI chat does (pending, growing in place, then sent — or failed if you write "fail", with *Retry*); `gradlew :demo:run --args="--layout=bubbles --theme=dark"` (or `just demo --layout=bubbles --theme=dark`) starts in a given layout and theme.
 The dark theme is the demo's own stylesheet over Modena's variables — the library brings none.
 The demo is itself a named module and runs on the module path, logging through tinylog.
 

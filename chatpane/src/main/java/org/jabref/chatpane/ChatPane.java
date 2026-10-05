@@ -12,8 +12,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
+import javafx.beans.Observable;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.CssMetaData;
@@ -28,6 +33,7 @@ import javafx.scene.control.Skin;
 
 import org.jspecify.annotations.Nullable;
 
+import org.jabref.chatpane.internal.MessageSearch;
 import org.jabref.chatpane.skin.ChatPaneSkin;
 
 /// A pane showing a chat conversation.
@@ -90,9 +96,22 @@ public class ChatPane extends Control {
 
     private final ObjectProperty<@Nullable Consumer<String>> linkHandler = new SimpleObjectProperty<>(this, "linkHandler");
 
+    private final StringProperty findQuery = new SimpleStringProperty(this, "findQuery", "");
+
+    private final ObservableList<FindMatch> findMatches = FXCollections.observableArrayList();
+
+    private final ObservableList<FindMatch> readOnlyFindMatches = FXCollections.unmodifiableObservableList(findMatches);
+
+    private final ReadOnlyIntegerWrapper findIndex = new ReadOnlyIntegerWrapper(this, "findIndex", -1);
+
     public ChatPane() {
         getStyleClass().add(STYLE_CLASS);
         updateLayoutPseudoClasses();
+        // Registered before any skin's listeners, so a skin always reads the matches of the
+        // current messages.
+        findQuery.addListener((Observable _) -> find(true));
+        messages.addListener((Observable _) -> find(false));
+        messageRenderer.addListener((Observable _) -> find(false));
     }
 
     /// The locale's short time (`15:34`, `3:34 PM`) in the system zone, as of now.
@@ -193,6 +212,76 @@ public class ChatPane extends Control {
         linkHandler.set(handler);
     }
 
+    /// The text to find in the messages: every occurrence — literal, ignoring case — becomes a
+    /// [FindMatch] in [#getFindMatches()], highlighted in every layout, and the current one
+    /// ([#findIndexProperty()]) is scrolled into view. Empty (the default) finds nothing; `null`
+    /// reads as empty. A new query makes the first match the current one.
+    ///
+    /// The pane only finds: a find bar, and which keys open and step through it, are the
+    /// application's — like the input line, they are not part of a display-only pane.
+    // [impl->dsn~find-in-messages~1]
+    public final StringProperty findQueryProperty() {
+        return findQuery;
+    }
+
+    public final String getFindQuery() {
+        return Objects.requireNonNullElse(findQuery.get(), "");
+    }
+
+    public final void setFindQuery(String query) {
+        findQuery.set(query);
+    }
+
+    /// The occurrences of [#findQueryProperty()] in the rendered message texts, in reading order;
+    /// kept up to date as messages change. Unmodifiable.
+    public final ObservableList<FindMatch> getFindMatches() {
+        return readOnlyFindMatches;
+    }
+
+    /// Index of the current match in [#getFindMatches()], `-1` while there is none.
+    public final ReadOnlyIntegerProperty findIndexProperty() {
+        return findIndex.getReadOnlyProperty();
+    }
+
+    public final int getFindIndex() {
+        return findIndex.get();
+    }
+
+    /// The current match, if there is one.
+    public final @Nullable FindMatch getCurrentFindMatch() {
+        int index = findIndex.get();
+        return index < 0 || index >= findMatches.size() ? null : findMatches.get(index);
+    }
+
+    /// Makes the next match the current one, after the last the first.
+    public final void findNext() {
+        if (!findMatches.isEmpty()) {
+            findIndex.set((findIndex.get() + 1) % findMatches.size());
+        }
+    }
+
+    /// Makes the previous match the current one, before the first the last.
+    public final void findPrevious() {
+        if (!findMatches.isEmpty()) {
+            findIndex.set((findIndex.get() - 1 + findMatches.size()) % findMatches.size());
+        }
+    }
+
+    /// Finds the query again; a new query starts at the first match, else the current index stays
+    /// (an answer growing while it is generated must not move it), cut to the last match.
+    private void find(boolean newQuery) {
+        String query = getFindQuery();
+        if (query.isEmpty() && findMatches.isEmpty()) {
+            return;
+        }
+        List<FindMatch> found = MessageSearch.find(messages, getMessageRenderer(), query);
+        int index = newQuery ? 0 : Math.min(findIndex.get(), found.size() - 1);
+        // Matches first: a listener of the matches can read an index past their end for a moment
+        // (getCurrentFindMatch() guards that), one of the index always finds its match.
+        findMatches.setAll(found);
+        findIndex.set(found.isEmpty() ? -1 : Math.max(index, 0));
+    }
+
     private void updateLayoutPseudoClasses() {
         MessageLayout current = getMessageLayout();
         LAYOUT_PSEUDO_CLASSES.forEach((layout, pseudoClass) -> pseudoClassStateChanged(pseudoClass, layout == current));
@@ -204,7 +293,7 @@ public class ChatPane extends Control {
     }
 
     // Workaround W4 (docs/workarounds.md): the tag sits here because OpenFastTrace does not scan CSS.
-    // [impl->dsn~chatpane-stylesheet~5]
+    // [impl->dsn~chatpane-stylesheet~6]
     @Override
     public String getUserAgentStylesheet() {
         return Objects.requireNonNull(ChatPane.class.getResource("chatpane.css"), "chatpane.css").toExternalForm();

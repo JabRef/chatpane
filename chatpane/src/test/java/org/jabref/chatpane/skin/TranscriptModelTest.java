@@ -37,6 +37,11 @@ class TranscriptModelTest {
         public int paragraphCount(ChatMessage message, boolean continued) {
             return irc.paragraphCount(message, continued);
         }
+
+        @Override
+        public TextPos locate(ChatMessage message, boolean continued, int line, int offset) {
+            return irc.locate(message, continued, line, offset);
+        }
     }
 
     /// Messages an hour apart, so none continues a group: `text` per message.
@@ -174,5 +179,37 @@ class TranscriptModelTest {
         List<ContentChange> changes = recordChanges(model);
         model.append(all, 1);
         assertThat(changes).isEmpty();
+    }
+
+    /// The text between two located positions, which must lie in one paragraph.
+    private static String textBetween(TranscriptModel model, TextPos start, TextPos end) {
+        assertThat(end.index()).isEqualTo(start.index());
+        return model.getPlainText(start.index()).substring(start.offset(), end.offset());
+    }
+
+    // [utest->dsn~find-reveal~1]
+    @Test
+    void locatesRenderedLinePositionsInEveryFormat() {
+        List<ChatMessage> all = List.of(
+                new ChatMessage("bob", "first word", T0, INCOMING),
+                new ChatMessage("bob", "x\nsecond word", T0.plusSeconds(10), INCOMING));
+        for (TranscriptFormat format : List.of(new IrcTranscript(TranscriptFormatTest.PLAIN),
+                new ModernTranscript(TranscriptFormatTest.PLAIN), new BodyFormat(TranscriptFormatTest.PLAIN))) {
+            TranscriptModel model = new TranscriptModel(format, all);
+            assertThat(textBetween(model, model.locate(0, 0, 6), model.locate(0, 0, 10)))
+                    .as("%s, after the IRC prefix or the modern header", format.getClass().getSimpleName())
+                    .isEqualTo("word");
+            assertThat(textBetween(model, model.locate(1, 1, 7), model.locate(1, 1, 11)))
+                    .as("%s, a continued message's second line", format.getClass().getSimpleName())
+                    .isEqualTo("word");
+        }
+    }
+
+    // [utest->dsn~find-reveal~1]
+    @Test
+    void locatesNothingTheDocumentDoesNotHave() {
+        TranscriptModel model = new TranscriptModel(new IrcTranscript(TranscriptFormatTest.PLAIN), messages("one"));
+        assertThat(model.locate(1, 0, 0)).as("no such message").isNull();
+        assertThat(model.locate(0, 1, 0)).as("no such line").isNull();
     }
 }

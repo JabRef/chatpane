@@ -26,6 +26,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Demo: a pretend assistant** answers each message the way an AI chat does, with *Delete* and *Retry*.
 - **Localizable texts**: `ChatPane.setTextLocalizer(…)` translates the pane's own texts (the context menu's *Copy* and *Select All*); JabRef can pass `Localization::lang`.
 - **Time format as a pane property**: `ChatPane.timeFormatterProperty()` sets how times read, in every layout alike.
+- **Find in the conversation**: `ChatPane.setFindQuery(…)` highlights every occurrence in the message texts, in every layout, and scrolls to the current one; `findNext()`/`findPrevious()` step through them. The demo has a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
 
 ### Changed
 

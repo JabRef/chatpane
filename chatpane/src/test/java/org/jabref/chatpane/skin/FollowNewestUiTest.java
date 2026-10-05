@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// Both views follow the newest message by the same rule: to the end after a change, unless the
 /// user has text selected — the transcript kept a selection from the start, the bubbles jumped to
 /// the end regardless until the views were split (review finding S2).
-// [utest->dsn~conversation-views~3]
+// [utest->dsn~conversation-views~4]
 // [utest->dsn~bubble-view~2]
 @FxTestApplication(FollowNewestUiTest.TestApp.class)
 class FollowNewestUiTest {

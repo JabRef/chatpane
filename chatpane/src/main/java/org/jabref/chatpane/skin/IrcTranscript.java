@@ -3,6 +3,7 @@ package org.jabref.chatpane.skin;
 import java.util.ArrayList;
 import java.util.List;
 
+import jfx.incubator.scene.control.richtext.TextPos;
 import jfx.incubator.scene.control.richtext.model.RichParagraph;
 
 import org.jabref.chatpane.ChatMessage;
@@ -33,16 +34,28 @@ final class IrcTranscript implements TranscriptFormat {
                 .addSegment(" ")
                 .addWithStyleNames(sender, names("message-sender", message, continued))
                 .addSegment(" ");
-        int prefix = time.length() + 1 + sender.length() + 1;
         List<TranscriptLine> paragraphs = new ArrayList<>();
-        List<TranscriptLine.Link> links = addLine(first, prefix, lines.getFirst(), message, continued);
+        List<TranscriptLine.Link> links = addLine(first, prefixLength(message), lines.getFirst(), message, continued,
+                context.found(message, 0));
         paragraphs.add(new TranscriptLine(first.build(), links));
-        for (TextLine line : lines.subList(1, lines.size())) {
+        for (int i = 1; i < lines.size(); i++) {
+            TextLine line = lines.get(i);
             RichParagraph.Builder paragraph = paragraphFor(line, false);
-            List<TranscriptLine.Link> lineLinks = addLine(paragraph, 0, line, message, continued);
+            List<TranscriptLine.Link> lineLinks = addLine(paragraph, 0, line, message, continued, context.found(message, i));
             paragraphs.add(new TranscriptLine(paragraph.build(), lineLinks));
         }
         return paragraphs;
+    }
+
+    /// The first line follows the prefix `time <sender> `.
+    @Override
+    public TextPos locate(ChatMessage message, boolean continued, int line, int offset) {
+        return TextPos.ofLeading(line, line == 0 ? prefixLength(message) + offset : offset);
+    }
+
+    /// The length of `time <sender> `.
+    private int prefixLength(ChatMessage message) {
+        return context.time(message.sentAt()).length() + 1 + message.sender().length() + 2 + 1;
     }
 
     @Override
