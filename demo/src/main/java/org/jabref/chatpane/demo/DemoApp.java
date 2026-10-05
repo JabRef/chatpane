@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,10 +16,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import org.slf4j.Logger;
@@ -36,8 +41,8 @@ import static org.jabref.chatpane.ChatMessage.Direction.OUTGOING;
 /// Shows a sample conversation in a [ChatPane]: toggles for the layout and the text format (plain,
 /// Markdown) top left, a light/dark/system theme toggle top right ([DemoTheme]), an input line at
 /// the bottom that appends the typed text as the local user's message — answered by a pretend
-/// assistant whose reply grows in place ([DemoResponder]) — and *Delete* and *Retry* as message
-/// actions.
+/// assistant whose reply grows in place ([DemoResponder]) — *Delete* and *Retry* as message
+/// actions, and a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
 // [impl->dsn~demo-app~3]
 public class DemoApp extends Application {
 
@@ -89,7 +94,9 @@ public class DemoApp extends Application {
                 toggles("Theme:", "theme", DemoTheme.values(), DemoTheme::label, theme, chosen -> chosen.applyTo(scene)));
         top.setPadding(new Insets(8));
         top.setAlignment(Pos.CENTER_LEFT);
-        root.setTop(top);
+        HBox findBar = findBar(chat);
+        root.setTop(new VBox(top, findBar));
+        scene.getAccelerators().put(KeyCombination.keyCombination("Shortcut+F"), () -> openFind(findBar));
         root.setBottom(inputLine(chat, responder));
 
         stage.setTitle("ChatPane demo");
@@ -138,6 +145,61 @@ public class DemoApp extends Application {
         }
         bar.setAlignment(Pos.CENTER_LEFT);
         return bar;
+    }
+
+    /// The find bar, hidden until <kbd>Ctrl</kbd> + <kbd>F</kbd>: the query field drives the pane's
+    /// find query, <kbd>Enter</kbd> and <kbd>Shift</kbd> + <kbd>Enter</kbd> step through the
+    /// matches, <kbd>Esc</kbd> closes the bar and clears the query.
+    // [impl->dsn~demo-find-bar~1]
+    private static HBox findBar(ChatPane chat) {
+        TextField query = new TextField();
+        query.setId("find-input");
+        query.setPromptText("Find");
+        query.textProperty().bindBidirectional(chat.findQueryProperty());
+        Label count = new Label();
+        count.setId("find-count");
+        count.textProperty().bind(Bindings.createStringBinding(
+                () -> chat.getFindQuery().isEmpty() ? "" : (chat.getFindIndex() + 1) + "/" + chat.getFindMatches().size(),
+                chat.findQueryProperty(), chat.findIndexProperty(), chat.getFindMatches()));
+        Button previous = new Button("Previous");
+        previous.setOnAction(_ -> chat.findPrevious());
+        Button next = new Button("Next");
+        next.setOnAction(_ -> chat.findNext());
+        Button close = new Button("Close");
+        HBox.setHgrow(query, Priority.ALWAYS);
+        HBox bar = new HBox(8, query, count, previous, next, close);
+        bar.setId("find-bar");
+        bar.setPadding(new Insets(0, 8, 8, 8));
+        bar.setAlignment(Pos.CENTER_LEFT);
+        bar.managedProperty().bind(bar.visibleProperty());
+        bar.setVisible(false);
+        close.setOnAction(_ -> closeFind(bar, chat));
+        query.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                if (event.isShiftDown()) {
+                    chat.findPrevious();
+                } else {
+                    chat.findNext();
+                }
+                event.consume();
+            } else if (event.getCode() == KeyCode.ESCAPE) {
+                closeFind(bar, chat);
+                event.consume();
+            }
+        });
+        return bar;
+    }
+
+    private static void openFind(HBox findBar) {
+        findBar.setVisible(true);
+        TextField query = (TextField) findBar.getChildren().getFirst();
+        query.requestFocus();
+        query.selectAll();
+    }
+
+    private static void closeFind(HBox findBar, ChatPane chat) {
+        findBar.setVisible(false);
+        chat.setFindQuery("");
     }
 
     private static HBox inputLine(ChatPane chat, DemoResponder responder) {

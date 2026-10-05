@@ -3,6 +3,7 @@ package org.jabref.chatpane.skin;
 import java.util.ArrayList;
 import java.util.List;
 
+import jfx.incubator.scene.control.richtext.TextPos;
 import jfx.incubator.scene.control.richtext.model.RichParagraph;
 
 import org.jabref.chatpane.ChatMessage;
@@ -37,6 +38,12 @@ final class ModernTranscript implements TranscriptFormat {
         }
         paragraphs.addAll(body.paragraphs(message, continued));
         return paragraphs;
+    }
+
+    /// Below the header, if the message has one.
+    @Override
+    public TextPos locate(ChatMessage message, boolean continued, int line, int offset) {
+        return TextPos.ofLeading(line + (continued ? 0 : 1), offset);
     }
 
     @Override

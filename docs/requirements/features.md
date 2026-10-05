@@ -23,6 +23,13 @@ Message texts can be rendered — Markdown out of the box, or by the application
 
 Needs: req
 
+## Find in the conversation
+`feat~find-in-conversation~1`
+
+The user can find text in a long conversation: every occurrence is highlighted, in every layout, and the application can step through them.
+
+Needs: req
+
 ## Theme-aware styling
 `feat~theme-aware-styling~1`
 

@@ -11,6 +11,7 @@ import javafx.scene.control.ListView;
 import org.jspecify.annotations.Nullable;
 
 import org.jabref.chatpane.ChatMessage;
+import org.jabref.chatpane.FindMatch;
 
 /// The [org.jabref.chatpane.MessageLayout#BUBBLES] view: a virtualized [ListView]
 /// (MADR 0009) of [MessageCell]s over its own copy of the messages.
@@ -81,6 +82,22 @@ final class BubbleView implements ConversationView {
     @Override
     public void restyle() {
         list.refresh();
+    }
+
+    /// Every bubble body builds its paragraphs, highlights included, when its cell is built.
+    // [impl->dsn~find-highlights~1]
+    @Override
+    public void findChanged() {
+        list.refresh();
+    }
+
+    /// Scrolls the match's bubble to the top of the list.
+    // [impl->dsn~find-reveal~1]
+    @Override
+    public void reveal(FindMatch match) {
+        if (match.message() < items.size()) {
+            list.scrollTo(match.message());
+        }
     }
 
     private void followEnd() {

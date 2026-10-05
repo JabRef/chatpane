@@ -152,6 +152,30 @@ final class TranscriptModel extends StyledTextModelViewOnlyBase {
         return true;
     }
 
+    /// Drops the built paragraphs, so the next request builds them again — with the find matches
+    /// as they are now.
+    // [impl->dsn~find-highlights~1]
+    void forgetBuilt() {
+        built.clear();
+    }
+
+    /// The position of character `offset` of rendered line `line` of message `message`, or `null`
+    /// if the document has no such message.
+    // [impl->dsn~find-reveal~1]
+    @Nullable TextPos locate(int message, int line, int offset) {
+        if (message < 0 || message >= messages.size()) {
+            return null;
+        }
+        @Nullable ChatMessage previous = message > 0 ? messages.get(message - 1) : null;
+        ChatMessage current = messages.get(message);
+        TextPos inMessage = format.locate(current, MessageGrouping.continuesGroup(previous, current), line, offset);
+        int paragraph = starts[message] + inMessage.index();
+        if (paragraph >= starts[message + 1]) {
+            return null;
+        }
+        return TextPos.ofLeading(paragraph, inMessage.offset());
+    }
+
     /// The message a paragraph position belongs to (for the context menu), if any.
     @Nullable ChatMessage messageAt(TextPos pos) {
         if (messages.isEmpty() || pos.index() < 0 || pos.index() >= size()) {

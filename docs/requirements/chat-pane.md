@@ -89,6 +89,18 @@ Covers:
 
 Needs: dsn
 
+### Find text in messages
+`req~find-in-messages~1`
+
+The application gives the pane a text to find; the pane highlights every occurrence in the shown message texts, ignoring case, marks one as the current, scrolls it into view, and steps to the next or previous one on request.
+The matches stay right while messages are added or replaced, and an answer growing in place does not scroll the view away.
+The find bar and its keys stay the application's, as the pane is display only (`req~display-only~1`).
+
+Covers:
+- feat~find-in-conversation~1
+
+Needs: dsn
+
 ### Choose the message layout
 `req~choose-message-layout~1`
 
@@ -243,9 +255,9 @@ Covers:
 Needs: impl, utest
 
 ### Conversation views
-`dsn~conversation-views~3`
+`dsn~conversation-views~4`
 
-A `ConversationView` is one way of showing the conversation: `node()`, `show(messages)`, `hide()`, `appended(messages, from)`, `updated(messages, index)` (one message replaced — updated in place, or re-rendered if the view cannot), `replaced(messages)`, `restyle()` (the styles the text is drawn with changed: draw it again, `dsn~transcript-restyle~1`).
+A `ConversationView` is one way of showing the conversation: `node()`, `show(messages)`, `hide()`, `appended(messages, from)`, `updated(messages, index)` (one message replaced — updated in place, or re-rendered if the view cannot), `replaced(messages)`, `restyle()` (the styles the text is drawn with changed: draw it again, `dsn~transcript-restyle~1`), `findChanged()` (draw the find highlights again, `dsn~find-highlights~1`) and `reveal(match)` (`dsn~find-reveal~1`).
 Only the shown view tracks the messages; `show` builds it from the current list, `hide` releases them.
 Every view follows the newest message by the same rule: after `show`, `appended`, `replaced`, or `updated` of the last message, it scrolls to the end unless the user has text selected in it.
 
@@ -317,7 +329,7 @@ Needs: impl, utest
 `show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu` (`dsn~message-actions~2`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
-Following the newest message (`dsn~conversation-views~3`) moves the hidden caret to the end of the document, which scrolls there.
+Following the newest message (`dsn~conversation-views~4`) moves the hidden caret to the end of the document, which scrolls there.
 
 Covers:
 - req~select-across-messages~1
@@ -370,6 +382,44 @@ Covers:
 
 Needs: impl, utest
 
+### Find
+`dsn~find-in-messages~1`
+
+`ChatPane` holds the find state: a `findQuery` string property (default empty, `null` reads as empty), an unmodifiable `ObservableList<FindMatch>` of matches and a read-only `findIndex` (the current match, `-1` for none), with `findNext()`/`findPrevious()` wrapping around and `getCurrentFindMatch()`.
+A `FindMatch` is `(message, line, start, end)`: the message index, the rendered line in it and the character range in the line's `plainText()` — rendered, so Markdown syntax is not found and a match stays within a line.
+`MessageSearch` (non-exported `internal`) finds them: the query quoted into a regular expression with `CASE_INSENSITIVE | UNICODE_CASE` (lower-casing could change the text's length and with it the positions), non-overlapping, in reading order, nothing for an empty query.
+The pane finds again on a change of the query (the first match becomes current), of the messages or of the renderer (the index stays, cut to the last match), from listeners registered in its constructor — before any skin's — and sets the matches before the index; with an empty query and no matches it does nothing, so a pane nobody searches pays nothing.
+
+Covers:
+- req~find-in-messages~1
+
+Needs: impl, utest
+
+### Find highlights
+`dsn~find-highlights~1`
+
+`FindHighlights` in the `RenderContext` holds the matches by message — by identity, as the formats know the message, not its index — and the current one; `TranscriptSegments.addLine` adds each match in a line as a `RichParagraph` highlight (after the IRC prefix) named `find-match`, plus `find-current` for the current one.
+The highlight is a `Path` under the text, styled by `chatpane.css` (filled like the selection, the current one stronger; a `Path` follows CSS changes by itself, unlike the area's text).
+The skin hears of a change of the matches, the index or the query and updates the highlights once per pulse (`Platform.runLater`): one new query changes all three, and the pane finds a new message before the view has it. `TranscriptView` drops the model's built paragraphs and lays the area out again (scroll position and selection stay); `BubbleView` refreshes the list, whose cells build their bodies anew.
+
+Covers:
+- req~find-in-messages~1
+
+Needs: impl, utest
+
+### Reveal the current match
+`dsn~find-reveal~1`
+
+On a new current match or a new query the skin asks the shown view to reveal the current match; matches that only moved with the messages do not.
+`TranscriptView` selects the match — `RichTextArea` has no public way to scroll but the caret — which also stops following the newest message, as any selection does; `TranscriptModel.locate` maps (message, line, offset) to a document position through the format's `locate` (`IrcTranscript` adds its `time <sender> ` prefix on the first line, `ModernTranscript` the header).
+`BubbleView` scrolls the match's bubble to the top.
+A match of a message the view does not have yet is ignored.
+
+Covers:
+- req~find-in-messages~1
+
+Needs: impl, utest
+
 ### Grouping
 `dsn~message-grouping~1`
 
@@ -382,13 +432,13 @@ Covers:
 Needs: impl, utest
 
 ### Stylesheet
-`dsn~chatpane-stylesheet~5`
+`dsn~chatpane-stylesheet~6`
 
 `chatpane.css` is the control's user-agent stylesheet.
 It holds layout and structure and no palette of its own (MADR 0007): colors come only from the standard Modena lookups — a container sets `-fx-background` (`-fx-control-inner-background` for rows, `-fx-base` for a bubble, `-fx-accent` for an outgoing bubble) and its labels take `-fx-text-background-color`, which Modena ladders against it; senders use `-fx-accent`, times the text color at 70 % opacity (Modena's `-fx-mid-text-color` is a fixed dark gray, unreadable on dark).
 Rendered text takes `-fx-fill` (the area resolves style names into styles; Workaround W3): in the transcript text and times `-fx-text-inner-color`, senders `-fx-accent`; in bubbles the laddered `-fx-text-background-color`.
 Span and line styles are the same everywhere: bold, italic, monospace code, strikethrough, heading sizes 1.4/1.2/1.1 em, quotes italic and dimmed, links in the accent and underlined — on an outgoing bubble (the accent) in the text color.
-The bubble body is flattened (`dsn~bubble-text~1`) and its selection highlight set per bubble kind.
+The bubble body is flattened (`dsn~bubble-text~1`) and its selection highlight set per bubble kind; find highlights (`.find-match`, `.find-current`) are filled the same way, at 30 % and 85 % opacity, without an outline.
 The style probe's background lists the lookups the text uses (`dsn~transcript-restyle~1`); the areas' wrapping and caret settings are no longer set here (Workaround W6).
 Status without a color of its own (Modena has no error lookup): a pending bubble dimmed, a failed one with a dashed outline in the text color, pending and failed text italic in both views; action buttons small.
 Sizes are in `em`.

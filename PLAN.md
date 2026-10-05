@@ -9,6 +9,14 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-10-05* — **Find API.**
+Carl: check JabRef's open `component: ai` PRs for what chatpane should take over, then "start with the find API" (from JabRef PR 17183, the AI chat's <kbd>Ctrl</kbd> + <kbd>F</kbd> find bar).
+The pane finds, the application owns the bar (`req~display-only~1`): `findQuery`, `getFindMatches()` (`FindMatch(message, line, start, end)` on the rendered lines), `findIndex`, `findNext()`/`findPrevious()`; `MessageSearch` in `internal`.
+Highlights are `RichParagraph` highlights by style name (`find-match`, `find-current`) — `Path`s styled by `chatpane.css`, no color in code, unlike JabRef's `Color.GOLD`; the transcript drops its built paragraphs and lays out again, bubbles refresh.
+`RichTextArea` has no public scroll: the transcript reveals the current match by selecting it; bubbles scroll the match's bubble to the top.
+The skin applies find changes once per pulse — one query change is three events, and the pane finds a new message before the view has it.
+Demo: find bar on `Shortcut+F`. Tests: `MessageSearchTest`, `FindHighlightsTest`, `TranscriptModelTest` (locate), `FindUiTest`.
+
 *2026-09-23* — **Maven Central publishing, SemVer proposed (MADR 0012, supersedes 0003).**
 Oliver: "Port the maven central publishing flow from JabRef/html-to-node"; then "switch to semver — and start with 0.1.0 — the -SNAPSHOTs are nice, no nightly thing".
 vanniktech `maven-publish` on `:chatpane` as `org.jabref:chatpane`; `publish.yml` pushes `0.1.0-SNAPSHOT` from `main` (PRs: `0.1.0-PR<n>-SNAPSHOT`), `release.yml` releases a `vX.Y.Z` tag. Changelog: the CalVer day sections, never tagged, are one `[Unreleased]` section now.
@@ -59,6 +67,8 @@ Not checked: a dark theme.
 2. Hanging indent for wrapped IRC lines (paragraph `SPACE_LEFT` + negative `FIRST_LINE_INDENT`, if the incubator supports it).
 3. Copy as Markdown (as `MarkdownTextFlow` does): *Copy* of a Markdown message puts its source on the clipboard next to the plain text.
 4. Demo dark theme: a selected toggle is hard to tell from the others.
+5. Syntax highlighting for fenced code blocks (from JabRef PR 17181, JSON answers): keep the fence's language on the line, a pluggable highlighter naming tokens by style class; turning bare JSON into a fenced block stays JabRef's (a `MessageRenderer` wrapping `markdown()`).
+6. Find: a long bubble scrolls to its top, not to the match in it; and while finding, an answer that grows at the end still follows the newest message in the bubble view.
 
 ## Code review (2026-09-22, after `f19a756`)
 
