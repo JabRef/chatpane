@@ -16,12 +16,14 @@ import org.jabref.chatpane.FindMatch;
 /// The [org.jabref.chatpane.MessageLayout#IRC] and
 /// [org.jabref.chatpane.MessageLayout#MODERN] view: one read-only [RichTextArea] holding
 /// the whole conversation as a [TranscriptModel] (MADR 0010), so a selection can run across
-/// messages and copies as a plain-text log. The [TranscriptFormat] decides how a message reads.
+/// messages and copies as a plain-text log. The [TranscriptFormat] decides how a message reads;
+/// [TranscriptActions] puts the message actions at the right of the line under the pointer.
 // [impl->dsn~transcript-view~5]
 final class TranscriptView implements ConversationView {
 
     private final RichTextArea area = new RichTextArea();
     private final TranscriptFormat format;
+    private final TranscriptActions actions;
 
     TranscriptView(TranscriptFormat format, RenderContext context) {
         this.format = format;
@@ -30,6 +32,7 @@ final class TranscriptView implements ConversationView {
             TextPos pos = area.getTextPosition(event.getScreenX(), event.getScreenY());
             return pos != null && area.getModel() instanceof TranscriptModel model ? model.messageAt(pos) : null;
         });
+        actions = new TranscriptActions(area, context);
         area.getStyleClass().add("chat-pane-transcript");
         area.setEditable(false);
         area.setFocusTraversable(false);
@@ -54,6 +57,7 @@ final class TranscriptView implements ConversationView {
     @Override
     public void hide() {
         area.setModel(null);
+        actions.update();
     }
 
     @Override
@@ -61,6 +65,7 @@ final class TranscriptView implements ConversationView {
         if (area.getModel() instanceof TranscriptModel model) {
             model.append(messages, from);
             followEnd();
+            actions.update();
         }
     }
 
@@ -70,6 +75,7 @@ final class TranscriptView implements ConversationView {
             if (index == messages.size() - 1) {
                 followEnd();
             }
+            actions.update();
         } else {
             replaced(messages);
         }
@@ -79,6 +85,7 @@ final class TranscriptView implements ConversationView {
     public void replaced(List<ChatMessage> messages) {
         area.setModel(new TranscriptModel(format, messages));
         followEnd();
+        actions.update();
     }
 
     /// Drops the area's built text cells, whose styles were resolved from the CSS of their time

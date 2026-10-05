@@ -19,7 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Markdown message bodies** in every layout: `ChatPane.setMessageRenderer(MessageRenderer.markdown())` — headings, emphasis, code, links, lists, quotes (commonmark-java). Plain text stays the default, and an application can plug in its own renderer.
 - **Clickable links**: `ChatPane.setLinkHandler(…)` is called with a link's target; the demo opens it in the browser.
 - **Demo: plain/Markdown toggle**, and a sample message showing what Markdown does.
-- **Message actions**: `ChatPane.getMessageActions()` — each action in the message's context menu (every layout) and as a button next to a bubble under the pointer, limited to the messages it fits (`onlyFor`).
+- **Message actions**: `ChatPane.getMessageActions()` — each action in the message's context menu (every layout) and as buttons next to the message under the pointer (beside a bubble, at the right of a transcript line), limited to the messages it fits (`onlyFor`).
 - **Message status** `SENT`, `PENDING`, `ERROR` (`ChatMessage.Status`), shown without colors of its own and exposed to CSS.
 - **Live updates**: replacing a message updates it in place — a generated answer can grow while the user reads and selects.
 - **Full date and time** as a tooltip on a bubble's time.

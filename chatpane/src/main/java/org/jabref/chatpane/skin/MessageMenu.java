@@ -24,7 +24,7 @@ import org.jabref.chatpane.MessageAction;
 ///
 /// Replaces the area's default menu: the area shows its own only while it has neither a context
 /// menu nor a context-menu handler.
-// [impl->dsn~message-actions~2]
+// [impl->dsn~message-actions~3]
 final class MessageMenu {
 
     private MessageMenu() {

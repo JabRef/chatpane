@@ -70,10 +70,10 @@ Covers:
 Needs: dsn
 
 ### Message actions
-`req~message-actions~1`
+`req~message-actions~2`
 
 The application offers actions on single messages — delete, answer again, … — each shown only for the messages it applies to.
-The user finds them in the message's context menu in every layout, after *Copy* and *Select All*, and in the bubble layout also as buttons next to the bubble under the pointer.
+The user finds them in the message's context menu in every layout, after *Copy* and *Select All*, and as buttons next to the message under the pointer: beside the bubble, or at the right of the message's line in the transcript layouts.
 
 Covers:
 - feat~chat-pane-control~1
@@ -186,7 +186,7 @@ Covers:
 - req~show-conversation~2
 - req~choose-message-layout~1
 - req~rich-text~1
-- req~message-actions~1
+- req~message-actions~2
 - req~localizable-texts~1
 
 Needs: impl, utest
@@ -337,15 +337,18 @@ Covers:
 Needs: impl, utest
 
 ### Message actions (design)
-`dsn~message-actions~2`
+`dsn~message-actions~3`
 
 A `MessageAction` (public record) has a text, an optional graphic supplier (a fresh node per use), an `appliesTo` predicate and an `onAction` consumer that gets the message instance.
 `MessageMenu` replaces the areas' default context menu — in the transcript and in every bubble body alike — with *Copy* (disabled without a selection), *Select All*, and, after a separator, the pane's actions that apply to the message under the pointer (the transcript finds it through `TranscriptModel.messageAt`).
-In bubbles, the same actions are also `message-action` buttons in a `message-actions` box on the inner side of the bubble (as in JabRef's AI chat), laid out always and shown while the pointer is over the cell, so the bubble does not jump; a graphic makes the text a tooltip.
+The same actions are also `message-action` buttons in a `message-actions` box (`ActionButtons`; a graphic makes the text a tooltip), laid out always and shown only under the pointer, so nothing jumps when they appear.
+In bubbles the box sits on the inner side of the bubble (as in JabRef's AI chat), shown while the pointer is over the cell.
+In the transcript, `TranscriptActions` is the area's right `SideDecorator`, set only while the pane has actions: a column as wide as the buttons of all the pane's actions, with a slot beside every paragraph; the message under the pointer (`TranscriptModel.messageAt`, tracked on mouse moves, after a scroll and after every change) gets its buttons in the slot of its first paragraph (`TranscriptModel.messageStartAt`).
+The area keeps decorator nodes by paragraph index across model changes, so a slot stands for a position and looks up the message only when it fills.
 The menu texts *Copy* and *Select All* go through the pane's text localizer (`dsn~chat-pane-control~5`); action texts are the application's own.
 
 Covers:
-- req~message-actions~1
+- req~message-actions~2
 - req~standard-text-actions~1
 - req~localizable-texts~1
 
@@ -355,7 +358,7 @@ Needs: impl, utest
 `dsn~transcript-view~5`
 
 `TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~5`); the model is the area's own, no second reference is kept.
-`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu` (`dsn~message-actions~2`).
+`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu`, the action buttons are `TranscriptActions` (`dsn~message-actions~3`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
 Following the newest message (`dsn~conversation-views~4`) moves the hidden caret to the end of the document, which scrolls there.

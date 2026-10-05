@@ -206,7 +206,16 @@
     -fx-font-style: italic;
 }
 
-/* Message actions next to a bubble: small, quiet buttons of the theme. */
+/*
+ * Message actions next to a bubble or a transcript line: small, quiet
+ * buttons of the theme. In the transcript they sit in the area's right side
+ * column, which Modena tints like a line-number gutter; here it is part of
+ * the text, so it stays clear.
+ */
+.chat-pane .chat-pane-transcript .right-side {
+    -fx-background-color: transparent;
+}
+
 .chat-pane .message-actions {
     -fx-spacing: 0.25em;
     -fx-padding: 0 0.333em;
