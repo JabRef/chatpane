@@ -43,8 +43,8 @@ import static org.jabref.chatpane.ChatMessage.Direction.OUTGOING;
 /// Markdown) top left, a light/dark/system theme toggle top right ([DemoTheme]), an input line at
 /// the bottom that appends the typed text as the local user's message — answered by a pretend
 /// assistant whose reply grows in place ([DemoResponder]) — *Delete* and *Retry* as message
-/// actions, and a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
-// [impl->dsn~demo-app~3]
+/// actions (*Retry* greyed out while an answer is being written), and a find bar on <kbd>Ctrl</kbd> + <kbd>F</kbd>.
+// [impl->dsn~demo-app~4]
 public class DemoApp extends Application {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DemoApp.class);
@@ -73,11 +73,16 @@ public class DemoApp extends Application {
         chat.setMessageRenderer(format.renderer);
         chat.setLinkHandler(url -> getHostServices().showDocument(url));
         DemoResponder responder = new DemoResponder(chat.getMessages());
+        MessageAction retry = new MessageAction("Retry",
+                message -> message.status() == ChatMessage.Status.ERROR && message.sender().equals(DemoResponder.NAME),
+                responder::retry);
+        // One answer at a time: the buttons and menu items grey out while one is being written.
+        retry.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> chat.getMessages().stream().anyMatch(m -> m.status() == ChatMessage.Status.PENDING),
+                chat.getMessages()));
         chat.getMessageActions().addAll(
-                MessageAction.of("Delete", message -> chat.getMessages().removeIf(m -> m == message)),
-                MessageAction.of("Retry", responder::retry)
-                        .onlyFor(message -> message.status() == ChatMessage.Status.ERROR
-                                && message.sender().equals(DemoResponder.NAME)));
+                new MessageAction("Delete", message -> chat.getMessages().removeIf(m -> m == message)),
+                retry);
 
         BorderPane root = new BorderPane(chat);
         Scene scene = new Scene(root, 760, 640);

@@ -4,15 +4,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 
 import org.jabref.chatpane.MessageAction;
 
 /// The `message-actions` box of `message-action` buttons, beside a bubble ([MessageCell]) or at
-/// the right of a transcript line ([TranscriptActions]); a graphic makes the text a tooltip.
-// [impl->dsn~message-actions~3]
+/// the right of a transcript line ([TranscriptActions]); each button made and bound by
+/// [ActionControls], so it follows its action.
+// [impl->dsn~message-actions~4]
 final class ActionButtons {
 
     private ActionButtons() {
@@ -24,18 +23,7 @@ final class ActionButtons {
         buttons.getStyleClass().add("message-actions");
         buttons.setAlignment(Pos.CENTER);
         for (MessageAction action : actions) {
-            Button button = new Button();
-            button.getStyleClass().add("message-action");
-            var graphic = action.graphic();
-            if (graphic != null) {
-                button.setGraphic(graphic.get());
-                button.setTooltip(new Tooltip(action.text()));
-            } else {
-                button.setText(action.text());
-            }
-            button.setFocusTraversable(false);
-            button.setOnAction(_ -> onAction.accept(action));
-            buttons.getChildren().add(button);
+            buttons.getChildren().add(ActionControls.button(action, () -> onAction.accept(action)));
         }
         return buttons;
     }

@@ -34,10 +34,11 @@ import org.jabref.chatpane.MessageAction;
 /// Pseudo-classes on the cell: `:outgoing` or `:incoming`; `:sent`, `:pending` or `:error`; and
 /// `:continued` for a message that continues its sender's group (no sender name).
 /// The pane's [MessageAction]s for the message sit as `message-action` buttons in a
-/// `message-actions` box on the inner side of the bubble, shown while the pointer is over the row;
+/// `message-actions` box on the inner side of the bubble, shown while the pointer is over the row
+/// and following the actions' properties ([ActionControls]);
 /// the time label's tooltip gives date and time in full.
 // [impl->dsn~message-cell-bubbles~3]
-// [impl->dsn~message-actions~3]
+// [impl->dsn~message-actions~4]
 final class MessageCell extends ListCell<ChatMessage> {
 
     private static final PseudoClass CONTINUED = PseudoClass.getPseudoClass("continued");
@@ -113,7 +114,7 @@ final class MessageCell extends ListCell<ChatMessage> {
         if (!actions.isEmpty()) {
             // On the inner side of the bubble, as in JabRef's AI chat; always laid out, only shown
             // under the pointer, so the bubble does not jump when they appear.
-            HBox buttons = ActionButtons.of(actions, action -> action.onAction().accept(message));
+            HBox buttons = ActionButtons.of(actions, action -> action.getOnAction().accept(message));
             buttons.visibleProperty().bind(hoverProperty());
             row.getChildren().add(outgoing ? 0 : 1, buttons);
         }

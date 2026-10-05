@@ -70,12 +70,12 @@ Needs: dsn
 ## Design
 
 ### Demo app
-`dsn~demo-app~3`
+`dsn~demo-app~4`
 
 `DemoApp` (module `org.jabref.chatpane.demo`) is a `BorderPane`: on top the layout toggles `layout-<name>` on the left and the theme toggles `theme-<name>` on the right (both from one `toggles` helper), the `ChatPane` in the center, `message-input` and *Send* at the bottom.
 A third toggle bar switches the text format (plain, Markdown; the default is Markdown), and links open through `HostServices`.
 `--layout=<name>`, `--theme=<name>` and `--text=<name>` pick the initial ones.
-`DemoResponder` answers each sent message: a `PENDING` message that a `Timeline` replaces word by word (the pane's live update), then `SENT`, or `ERROR` if the question contains "fail"; the pane's message actions are *Delete* (any message, found by identity) and *Retry* (the assistant's failed answers).
+`DemoResponder` answers each sent message: a `PENDING` message that a `Timeline` replaces word by word (the pane's live update), then `SENT`, or `ERROR` if the question contains "fail"; the pane's message actions are *Delete* (any message, found by identity) and *Retry* (the assistant's failed answers, its `disable` bound to "a message is `PENDING`", so only one answer is written at a time).
 `gradlew :demo:run` starts it with `mainModule` set, so Gradle puts the modules on the module path; SLF4J reaches tinylog through service binding (`slf4j-tinylog`, `tinylog-impl` as runtime-only dependencies, MADR 0005).
 
 Covers:

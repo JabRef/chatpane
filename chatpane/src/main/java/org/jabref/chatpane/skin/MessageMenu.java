@@ -20,11 +20,11 @@ import org.jabref.chatpane.MessageAction;
 
 /// The context menu of message text, the same in every layout: *Copy* and *Select All* (what the
 /// area's own menu offers a read-only text), then the pane's [MessageAction]s for the message
-/// under the pointer.
+/// under the pointer, following their properties while the menu is open.
 ///
 /// Replaces the area's default menu: the area shows its own only while it has neither a context
 /// menu nor a context-menu handler.
-// [impl->dsn~message-actions~3]
+// [impl->dsn~message-actions~4]
 final class MessageMenu {
 
     private MessageMenu() {
@@ -55,17 +55,12 @@ final class MessageMenu {
         if (message != null) {
             List<MessageAction> actions = context.actionsFor(message);
             if (!actions.isEmpty()) {
-                items.add(new SeparatorMenuItem());
+                SeparatorMenuItem separator = new SeparatorMenuItem();
+                separator.visibleProperty().bind(ActionControls.anyVisible(actions));
+                items.add(separator);
             }
             for (MessageAction action : actions) {
-                MenuItem item = new MenuItem(action.text());
-                var graphic = action.graphic();
-                if (graphic != null) {
-                    item.setGraphic(graphic.get());
-                }
-                item.getStyleClass().add("message-action");
-                item.setOnAction(_ -> action.onAction().accept(message));
-                items.add(item);
+                items.add(ActionControls.menuItem(action, message));
             }
         }
         return items;

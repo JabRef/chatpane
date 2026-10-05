@@ -29,7 +29,7 @@ import org.jabref.chatpane.MessageAction;
 /// The area's right [SideDecorator] column holds them: always as wide as the buttons of all the
 /// pane's actions, so the text does not reflow when they appear, and only there while the pane has
 /// actions ([#update()]).
-// [impl->dsn~message-actions~3]
+// [impl->dsn~message-actions~4]
 final class TranscriptActions implements SideDecorator {
 
     /// The message under the pointer and its first paragraph.
@@ -115,6 +115,6 @@ final class TranscriptActions implements SideDecorator {
         }
         ChatMessage message = current.message();
         List<MessageAction> actions = context.actionsFor(message);
-        slot.getChildren().setAll(ActionButtons.of(actions, action -> action.onAction().accept(message)));
+        slot.getChildren().setAll(ActionButtons.of(actions, action -> action.getOnAction().accept(message)));
     }
 }

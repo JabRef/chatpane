@@ -337,11 +337,14 @@ Covers:
 Needs: impl, utest
 
 ### Message actions (design)
-`dsn~message-actions~3`
+`dsn~message-actions~4`
 
-A `MessageAction` (public record) has a text, an optional graphic supplier (a fresh node per use), an `appliesTo` predicate and an `onAction` consumer that gets the message instance.
+A `MessageAction` (public final class, like a `MenuItem` a description the skin makes controls from) has the JavaFX properties `text`, `graphic` (a supplier: a fresh node per control), `disable` and `visible`, an observable style-class list, and the final `appliesTo` predicate and `onAction` consumer that gets the message instance.
+`appliesTo` is asked whenever a message is shown and looks at the message alone (a message changes only by being replaced); state outside the message goes into `disable` or `visible`.
+`ActionControls` binds every menu item and button to its action, so a change shows at once without re-rendering: the text, the graphic (made anew when the supplier changes), greyed out while `disable`, gone without a gap while not `visible` (the menu's separator too when no action is visible), and `message-action` plus the action's style classes.
+The bindings observe the action weakly, so a long-lived action keeps no closed menu or recycled cell alive.
 `MessageMenu` replaces the areas' default context menu — in the transcript and in every bubble body alike — with *Copy* (disabled without a selection), *Select All*, and, after a separator, the pane's actions that apply to the message under the pointer (the transcript finds it through `TranscriptModel.messageAt`).
-The same actions are also `message-action` buttons in a `message-actions` box (`ActionButtons`; a graphic makes the text a tooltip), laid out always and shown only under the pointer, so nothing jumps when they appear.
+The same actions are also `message-action` buttons in a `message-actions` box (`ActionButtons`, each made by `ActionControls`; with a graphic, the button shows the graphic only and the text as a tooltip, keeping the text set for screen readers), laid out always and shown only under the pointer, so nothing jumps when they appear.
 In bubbles the box sits on the inner side of the bubble (as in JabRef's AI chat), shown while the pointer is over the cell.
 In the transcript, `TranscriptActions` is the area's right `SideDecorator`, set only while the pane has actions: a column as wide as the buttons of all the pane's actions, with a slot beside every paragraph; the message under the pointer (`TranscriptModel.messageAt`, tracked on mouse moves, after a scroll and after every change) gets its buttons in the slot of its first paragraph (`TranscriptModel.messageStartAt`).
 The area keeps decorator nodes by paragraph index across model changes, so a slot stands for a position and looks up the message only when it fills.
@@ -358,7 +361,7 @@ Needs: impl, utest
 `dsn~transcript-view~5`
 
 `TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~5`); the model is the area's own, no second reference is kept.
-`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu`, the action buttons are `TranscriptActions` (`dsn~message-actions~3`).
+`show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu`, the action buttons are `TranscriptActions` (`dsn~message-actions~4`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
 Following the newest message (`dsn~conversation-views~4`) moves the hidden caret to the end of the document, which scrolls there.

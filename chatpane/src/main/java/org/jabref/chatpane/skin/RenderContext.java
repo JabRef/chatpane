@@ -86,7 +86,7 @@ final class RenderContext {
 
     /// The pane's actions that apply to `message`, in order.
     List<MessageAction> actionsFor(ChatMessage message) {
-        return actions.get().stream().filter(action -> action.appliesTo().test(message)).toList();
+        return actions.get().stream().filter(action -> action.getAppliesTo().test(message)).toList();
     }
 
     List<TextLine> lines(ChatMessage message) {

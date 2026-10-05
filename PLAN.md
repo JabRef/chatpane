@@ -19,7 +19,13 @@ Tests: `FollowNewestUiTest.bubblesShowTheWholeNewestMessageWhileItGrows` (red be
 Carl: "if i enter fail in chat in bubbles mode, i can click a retry button. but in irc and modern mode, there are no buttons to click. should appear on hover on the right in the corresponding line".
 `TranscriptActions` is the area's right `SideDecorator` (public incubator API, no overlay over internals): a column as wide as all actions' buttons, set only while the pane has actions; the message under the pointer gets its buttons beside its first paragraph.
 The area caches decorator nodes by paragraph index and never drops them on a model change, so the slots are positional and look up the message when they fill.
-Modena tints the side column like a gutter; `chatpane.css` clears it. Button building shared with bubbles in `ActionButtons`. `req~message-actions~2`, `dsn~message-actions~3`.
+Modena tints the side column like a gutter; `chatpane.css` clears it. Button building shared with bubbles in `ActionButtons`. `req~message-actions~2`, `dsn~message-actions~4`.
+*2026-10-05* — **Reactive `MessageAction`.**
+Carl asked whether actions as information holders are JavaFX standard; answer: core JavaFX has no `Action` (Swing, ControlsFX and JabRef do), but `MenuItem`/`Tab`/`TableColumn`/`ButtonType` are descriptors a skin renders — all observable but `ButtonType`.
+Then "no pure JavaFX API, but fix its flaws with reactivity": `MessageAction` is a final class with `text`, `graphic` (supplier), `disable`, `visible` properties and a style-class list; `appliesTo` and `onAction` stay final (a message changes only by replacement, so the predicate is re-asked anyway).
+`ActionControls` binds menu items and buttons to the action — weakly, checked by a GC test that fails with a strong listener; an icon button keeps its text for screen readers (`GRAPHIC_ONLY`).
+Left out on purpose: accelerator (which message would it act on?), `id` (not unique per message), a mutable `onAction`.
+Demo: *Retry* greyed out while an answer is pending.
 *2026-10-05* — **Headless UI tests in `build`, TestFX gone (MADR 0008 revised in place).**
 Carl: "JabRef recently switched to headless ui tests. is this possible for chatpane too?", then "all in", and "replace MADR 0008 in place".
 After JabRef PR 16850: JavaFX's own headless platform (`glass.platform=Headless`, `prism.order=sw`); `FxTestApplication` + `FxTestExtension` replace TestFX's `@TestFxApplication` — toolkit once per JVM, a fresh `Stage` per class, an exception on the FX thread fails the test (checked with a throwaway test).
