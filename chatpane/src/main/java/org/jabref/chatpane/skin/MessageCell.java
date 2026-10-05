@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
@@ -38,7 +37,7 @@ import org.jabref.chatpane.MessageAction;
 /// `message-actions` box on the inner side of the bubble, shown while the pointer is over the row;
 /// the time label's tooltip gives date and time in full.
 // [impl->dsn~message-cell-bubbles~3]
-// [impl->dsn~message-actions~2]
+// [impl->dsn~message-actions~3]
 final class MessageCell extends ListCell<ChatMessage> {
 
     private static final PseudoClass CONTINUED = PseudoClass.getPseudoClass("continued");
@@ -114,32 +113,11 @@ final class MessageCell extends ListCell<ChatMessage> {
         if (!actions.isEmpty()) {
             // On the inner side of the bubble, as in JabRef's AI chat; always laid out, only shown
             // under the pointer, so the bubble does not jump when they appear.
-            HBox buttons = actionButtons(actions, message);
+            HBox buttons = ActionButtons.of(actions, action -> action.onAction().accept(message));
             buttons.visibleProperty().bind(hoverProperty());
             row.getChildren().add(outgoing ? 0 : 1, buttons);
         }
         return row;
-    }
-
-    private static HBox actionButtons(List<MessageAction> actions, ChatMessage message) {
-        HBox buttons = new HBox();
-        buttons.getStyleClass().add("message-actions");
-        buttons.setAlignment(Pos.CENTER);
-        for (MessageAction action : actions) {
-            Button button = new Button();
-            button.getStyleClass().add("message-action");
-            var graphic = action.graphic();
-            if (graphic != null) {
-                button.setGraphic(graphic.get());
-                button.setTooltip(new Tooltip(action.text()));
-            } else {
-                button.setText(action.text());
-            }
-            button.setFocusTraversable(false);
-            button.setOnAction(_ -> action.onAction().accept(message));
-            buttons.getChildren().add(button);
-        }
-        return buttons;
     }
 
     private static Label label(String content, String styleClass) {

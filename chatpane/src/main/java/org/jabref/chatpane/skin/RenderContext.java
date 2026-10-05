@@ -79,6 +79,11 @@ final class RenderContext {
         return localizer.get().apply(english);
     }
 
+    /// All of the pane's actions, in order.
+    List<MessageAction> actions() {
+        return actions.get();
+    }
+
     /// The pane's actions that apply to `message`, in order.
     List<MessageAction> actionsFor(ChatMessage message) {
         return actions.get().stream().filter(action -> action.appliesTo().test(message)).toList();

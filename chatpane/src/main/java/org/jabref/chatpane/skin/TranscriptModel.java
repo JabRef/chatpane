@@ -184,6 +184,15 @@ final class TranscriptModel extends StyledTextModelViewOnlyBase {
         return messages.get(messageAt(pos.index()));
     }
 
+    /// The first paragraph of the message at `pos` (where its action buttons go), or -1 if there
+    /// is no message there.
+    int messageStartAt(TextPos pos) {
+        if (messages.isEmpty() || pos.index() < 0 || pos.index() >= size()) {
+            return -1;
+        }
+        return starts[messageAt(pos.index())];
+    }
+
     /// The target of the link at `pos`, if there is one (for [LinkInteraction]).
     @Nullable String linkAt(TextPos pos) {
         if (messages.isEmpty() || pos.index() < 0 || pos.index() >= size()) {

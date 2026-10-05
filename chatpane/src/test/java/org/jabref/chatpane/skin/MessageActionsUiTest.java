@@ -7,11 +7,15 @@ import java.util.stream.IntStream;
 
 import javafx.application.Application;
 import javafx.css.PseudoClass;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import jfx.incubator.scene.control.richtext.RichTextArea;
@@ -34,9 +38,9 @@ import static org.jabref.chatpane.FxThread.onFx;
 import static org.jabref.chatpane.FxThread.settle;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// Message actions (context menu in every layout, hover buttons on bubbles), status, and a message
+/// Message actions (context menu and hover buttons in every layout), status, and a message
 /// replaced in place as a generated answer grows.
-// [utest->dsn~message-actions~2]
+// [utest->dsn~message-actions~3]
 // [utest->dsn~conversation-views~4]
 @FxTestApplication(MessageActionsUiTest.TestApp.class)
 class MessageActionsUiTest {
@@ -135,6 +139,52 @@ class MessageActionsUiTest {
     }
 
     @Test
+    void transcriptShowsActionButtonsRightOfTheMessageUnderThePointer() throws Exception {
+        ChatMessage failed = new ChatMessage("me", "Did not go through", T0.plusSeconds(600), OUTGOING, Status.ERROR);
+        for (MessageLayout layout : List.of(MessageLayout.IRC, MessageLayout.MODERN)) {
+            show(layout, new ChatMessage("alice", "Hi", T0, INCOMING), failed);
+            RichTextArea area = onFx(() -> (RichTextArea) pane.lookup(".chat-pane-transcript"));
+            assertThat(onFx(() -> visibleActions(area))).as("%s: none before the pointer comes", layout).isEmpty();
+
+            Bounds text = onFx(() -> shownText(area, "Did not go through").localToScreen(
+                    shownText(area, "Did not go through").getBoundsInLocal()));
+            pointer(area, MouseEvent.MOUSE_MOVED, text.getCenterX(), text.getCenterY());
+            List<Button> buttons = onFx(() -> visibleActions(area));
+            assertThat(onFx(() -> buttons.stream().map(Button::getText).toList())).as(layout.name())
+                    .containsExactly("Delete", "Retry");
+            Bounds first = onFx(() -> buttons.getFirst().localToScreen(buttons.getFirst().getBoundsInLocal()));
+            assertThat(first.getMinX()).as("%s: right of the text", layout).isGreaterThanOrEqualTo(text.getMaxX());
+            assertThat(first.getMinY()).as("%s: not below the message", layout).isLessThan(text.getMaxY());
+
+            onFx(() -> {
+                buttons.getLast().fire();
+                return null;
+            });
+            assertThat(acted).as(layout.name()).containsExactly(failed);
+
+            pointer(area, MouseEvent.MOUSE_EXITED, text.getCenterX(), text.getCenterY());
+            assertThat(onFx(() -> visibleActions(area))).as("%s: gone with the pointer", layout).isEmpty();
+        }
+    }
+
+    @Test
+    void transcriptKeepsNoButtonColumnWithoutActions() throws Exception {
+        show(MessageLayout.IRC, new ChatMessage("alice", "Hi", T0, INCOMING));
+        RichTextArea area = onFx(() -> (RichTextArea) pane.lookup(".chat-pane-transcript"));
+        assertThat(onFx(area::getRightDecorator)).isNotNull();
+        List<MessageAction> actions = onFx(() -> List.copyOf(pane.getMessageActions()));
+        try {
+            onFx(() -> {
+                pane.getMessageActions().clear();
+                return null;
+            });
+            assertThat(onFx(area::getRightDecorator)).isNull();
+        } finally {
+            onFx(() -> pane.getMessageActions().setAll(actions));
+        }
+    }
+
+    @Test
     void statusIsAPseudoClassOfTheBubbleCell() throws Exception {
         show(MessageLayout.BUBBLES, new ChatMessage("ai", "Thinking", T0, INCOMING, Status.PENDING));
         assertThat(onFx(() -> cellStates())).contains(PseudoClass.getPseudoClass("pending"))
@@ -189,6 +239,31 @@ class MessageActionsUiTest {
                 assertThat(onFx(() -> lastBody().getModel().getPlainText(1))).isEqualTo("grows over lines");
             }
         }
+    }
+
+    private static void pointer(RichTextArea area, javafx.event.EventType<MouseEvent> type, double screenX, double screenY)
+            throws Exception {
+        onFx(() -> {
+            javafx.geometry.Point2D local = area.screenToLocal(screenX, screenY);
+            area.fireEvent(new MouseEvent(type, local.getX(), local.getY(), screenX, screenY, MouseButton.NONE, 0,
+                    false, false, false, false, false, false, false, false, false, false, null));
+            return null;
+        });
+        settle(pane);
+    }
+
+    private static List<Button> visibleActions(RichTextArea area) {
+        return area.lookupAll(".message-action").stream()
+                .filter(node -> node.getScene() != null && node.isVisible())
+                .map(node -> (Button) node)
+                .toList();
+    }
+
+    private static Text shownText(RichTextArea area, String content) {
+        return area.lookupAll("Text").stream()
+                .filter(node -> node instanceof Text text && content.equals(text.getText()))
+                .map(node -> (Text) node)
+                .findFirst().orElseThrow();
     }
 
     private static BubbleText lastBody() {
