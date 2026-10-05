@@ -2,7 +2,6 @@ package org.jabref.chatpane.skin;
 
 import java.util.List;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -14,21 +13,24 @@ import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.FindMatch;
 
 /// The [org.jabref.chatpane.MessageLayout#BUBBLES] view: a virtualized [ListView]
-/// (MADR 0009) of [MessageCell]s over its own copy of the messages.
+/// (MADR 0009) of [MessageCell]s over its own copy of the messages, laid out by a [BubbleFlow]
+/// that stays at the end while the newest bubble settles its height.
 ///
 /// The mouse wheel over a bubble scrolls the list by itself: a body as tall as its text passes
 /// wheel events on. (The `TextArea` bodies before did not; the filter that fixed it, W2 in
 /// docs/workarounds.md, went with them.)
-// [impl->dsn~bubble-view~2]
+// [impl->dsn~bubble-view~3]
 final class BubbleView implements ConversationView {
 
     private final ObservableList<ChatMessage> items = FXCollections.observableArrayList();
     private final ListView<ChatMessage> list = new ListView<>(items);
+    private final BubbleFlow.Skin skin = new BubbleFlow.Skin(list);
 
     BubbleView(RenderContext context) {
         list.getStyleClass().add("chat-pane-list");
         list.setFocusTraversable(false);
         list.setCellFactory(_ -> new MessageCell(context));
+        list.setSkin(skin);
     }
 
     @Override
@@ -76,8 +78,6 @@ final class BubbleView implements ConversationView {
         followEnd();
     }
 
-    /// Scrolls to the last message — twice: a new bubble's body knows its final height only after
-    /// its RichTextArea laid out, one pulse later, so the first scroll can end a few pixels short.
     /// Builds the visible cells again: each body resolved its styles when it was built (W7).
     @Override
     public void restyle() {
@@ -100,14 +100,14 @@ final class BubbleView implements ConversationView {
         }
     }
 
+    /// Scrolls to the last message and keeps the flow there while its bubble settles its height
+    /// ([BubbleFlow]); with text selected, the view stays where it is.
     private void followEnd() {
-        if (!hasSelection() && !items.isEmpty()) {
+        if (hasSelection()) {
+            skin.flow().stay();
+        } else if (!items.isEmpty()) {
             list.scrollTo(items.size() - 1);
-            Platform.runLater(() -> {
-                if (!hasSelection() && !items.isEmpty()) {
-                    list.scrollTo(items.size() - 1);
-                }
-            });
+            skin.flow().follow();
         }
     }
 

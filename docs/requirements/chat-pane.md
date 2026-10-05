@@ -269,7 +269,7 @@ Needs: impl
 ### Skin
 `dsn~chat-pane-skin~7`
 
-`ChatPaneSkin` holds one `ConversationView` per layout in an `EnumMap` — the one place that maps layouts to views: `BUBBLES` → `BubbleView` (`dsn~bubble-view~2`), `IRC` → `TranscriptView` with `IrcTranscript`, `MODERN` → `TranscriptView` with `ModernTranscript` (`dsn~transcript-view~5`).
+`ChatPaneSkin` holds one `ConversationView` per layout in an `EnumMap` — the one place that maps layouts to views: `BUBBLES` → `BubbleView` (`dsn~bubble-view~3`), `IRC` → `TranscriptView` with `IrcTranscript`, `MODERN` → `TranscriptView` with `ModernTranscript` (`dsn~transcript-view~5`).
 A layout change hides the shown view, puts the new one on screen and then shows it (so its text cells are built in the scene, with the pane's CSS); a change of the time formatter, the renderer or the actions renders the shown view again; the skin's only other job is to report each change of the messages to the shown view, as an append, the replacement of one message, or anything else (`dsn~message-changes~2`).
 Listeners go through `SkinBase.registerChangeListener`/`registerListChangeListener`, so `dispose()` removes them; it also hides the shown view, so a replaced skin keeps nothing alive.
 The skin is `final` (Effective Java item 19): it offers no hooks to override, and a different look is a different skin (`setSkin`, `-fx-skin`).
@@ -306,10 +306,13 @@ Covers:
 Needs: impl, utest
 
 ### Bubble view
-`dsn~bubble-view~2`
+`dsn~bubble-view~3`
 
 `BubbleView` shows a virtualized `ListView` (style class `chat-pane-list`, MADR 0009) of `MessageCell`s over its own copy of the messages: `show`/`replaced` set it, `appended` adds the new tail, `updated` sets the one item (and its successor's, if the change affects that one's grouping), `hide` clears it.
-Text counts as selected when the scene's focus owner is a `BubbleText` of this list with a non-empty selection; otherwise a change scrolls to the last message — twice, the second time on the next pulse, since a new body knows its final height only after its area laid out.
+Text counts as selected when the scene's focus owner is a `BubbleText` of this list with a non-empty selection; otherwise a change scrolls to the last message and pins the list there.
+A new body knows its final height only after its area laid out, a pulse later, and the flow keeps its position as a fraction: the newest bubble slid partly out of view, and an answer growing word by word flickered between shown whole and cut off.
+So the list's skin (`BubbleFlow.Skin`) lays it out with a `BubbleFlow`, a `VirtualFlow` that, while pinned, lays out again from the end (at most three times) whenever a layout pass ends short of it — in the same pulse, so no frame shows the cut-off state.
+A position change outside a layout pass is the user's: it unpins the flow, unless it ends at the very end, which pins it again; a change with text selected unpins it too.
 The wheel over a body scrolls the list by itself (the content-high area passes wheel events on).
 
 Covers:

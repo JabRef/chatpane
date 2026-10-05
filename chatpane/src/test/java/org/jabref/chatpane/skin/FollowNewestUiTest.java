@@ -22,12 +22,13 @@ import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
 import static org.jabref.chatpane.FxThread.onFx;
 import static org.jabref.chatpane.FxThread.settle;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 /// Both views follow the newest message by the same rule: to the end after a change, unless the
 /// user has text selected — the transcript kept a selection from the start, the bubbles jumped to
 /// the end regardless until the views were split (review finding S2).
 // [utest->dsn~conversation-views~4]
-// [utest->dsn~bubble-view~2]
+// [utest->dsn~bubble-view~3]
 @FxTestApplication(FollowNewestUiTest.TestApp.class)
 class FollowNewestUiTest {
 
@@ -77,6 +78,67 @@ class FollowNewestUiTest {
         fill(MessageLayout.BUBBLES);
         append();
         assertThat(lastVisibleBubble()).isEqualTo(40);
+    }
+
+    /// How far the newest bubble's bottom lies below the list's bottom edge: 0 when it is shown whole
+    /// at the end, positive when it is cut off.
+    private static double newestBubbleCutOff() throws Exception {
+        settle(pane);
+        return onFx(() -> {
+            VirtualFlow<?> flow = (VirtualFlow<?>) pane.lookup(".virtual-flow");
+            var newest = flow.getLastVisibleCell();
+            assertThat(newest.getIndex()).as("the newest message is the last visible").isEqualTo(pane.getMessages().size() - 1);
+            return newest.localToScene(newest.getLayoutBounds()).getMaxY() - flow.localToScene(flow.getLayoutBounds()).getMaxY();
+        });
+    }
+
+    /// A new bubble knows its height only once its text area laid out, a pulse after the list
+    /// scrolled to it; the list kept its scroll fraction and cut the bubble off — and a growing answer
+    /// flickered between whole and cut off with every word.
+    @Test
+    void bubblesShowTheWholeNewestMessageWhileItGrows() throws Exception {
+        fill(MessageLayout.BUBBLES);
+        String text = "";
+        onFx(() -> pane.getMessages().add(new ChatMessage("ai", "…", T0.plusSeconds(600L * 41), INCOMING, ChatMessage.Status.PENDING)));
+        assertThat(newestBubbleCutOff()).as("appended").isCloseTo(0, within(1.0));
+        for (int word = 0; word < 30; word++) {
+            text += "word" + word + " ";
+            String grown = text;
+            onFx(() -> {
+                int last = pane.getMessages().size() - 1;
+                pane.getMessages().set(last, pane.getMessages().get(last).withText(grown));
+                return null;
+            });
+            assertThat(newestBubbleCutOff()).as("after %s words", word + 1).isCloseTo(0, within(1.0));
+        }
+    }
+
+    /// Pinned to the end only until the user scrolls away: a later layout pass leaves the list where
+    /// the user put it; scrolling back to the very end pins it again.
+    @Test
+    void bubblesStayWhereTheUserScrolled() throws Exception {
+        fill(MessageLayout.BUBBLES);
+        settle(pane);
+        double scrolled = onFx(() -> {
+            VirtualFlow<?> flow = (VirtualFlow<?>) pane.lookup(".virtual-flow");
+            flow.scrollPixels(-200);
+            return flow.getPosition();
+        });
+        onFx(() -> {
+            pane.getScene().getWindow().setWidth(pane.getScene().getWindow().getWidth() - 40);
+            return null;
+        });
+        settle(pane);
+        assertThat(onFx(() -> ((VirtualFlow<?>) pane.lookup(".virtual-flow")).getPosition()))
+                .as("not pulled back to the end").isLessThan(0.99).isCloseTo(scrolled, within(0.05));
+
+        onFx(() -> {
+            VirtualFlow<?> flow = (VirtualFlow<?>) pane.lookup(".virtual-flow");
+            flow.scrollPixels(10_000);
+            pane.getScene().getWindow().setWidth(pane.getScene().getWindow().getWidth() + 40);
+            return null;
+        });
+        assertThat(newestBubbleCutOff()).as("pinned again at the end").isCloseTo(0, within(1.0));
     }
 
     @Test

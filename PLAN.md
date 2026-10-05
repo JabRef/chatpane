@@ -9,6 +9,12 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-10-05* — **Bubble scroll flicker fixed.**
+Carl: "If a text in bubbles is added and the pane is to small, the scrolling goes crazy, flickering between showing the next bubble and not showing in high speed".
+Cause: a new or grown bubble knows its height a pulse after the list scrolled to it, and the `VirtualFlow` keeps its position as a fraction — the newest bubble slid 40 px out of view after every word, then the next word's scroll brought it back. A headless probe counted 65 of 129 rendered frames cut off; the old second `scrollTo` on the next pulse came one pulse too early.
+Fix: `BubbleFlow`, the bubble list's `VirtualFlow` (via `BubbleFlow.Skin`), stays pinned to the end while following — a layout pass that ends short of it lays out again from the end in the same pulse (0 of 128 frames cut off); a position change outside layout is the user's and unpins it unless it ends at the end.
+Tests: `FollowNewestUiTest.bubblesShowTheWholeNewestMessageWhileItGrows` (red before), `bubblesStayWhereTheUserScrolled`.
+
 *2026-10-05* — **Headless UI tests in `build`, TestFX gone (MADR 0008 revised in place).**
 Carl: "JabRef recently switched to headless ui tests. is this possible for chatpane too?", then "all in", and "replace MADR 0008 in place".
 After JabRef PR 16850: JavaFX's own headless platform (`glass.platform=Headless`, `prism.order=sw`); `FxTestApplication` + `FxTestExtension` replace TestFX's `@TestFxApplication` — toolkit once per JVM, a fresh `Stage` per class, an exception on the FX thread fails the test (checked with a throwaway test).

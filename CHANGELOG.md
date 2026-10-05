@@ -36,6 +36,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **Bubbles no longer flicker while an answer grows**: in a short pane the newest bubble was cut off a pulse after every change and jumped back, many times a second; the list now stays at the end until you scroll away.
 - **IRC and modern are styled when first shown**: they no longer appear unstyled (italic, no colors, overlapping lines) until the text format is switched.
 - **Switching the theme no longer crashes** with "duplicate children added", and IRC and modern follow the new theme's colors.
 
