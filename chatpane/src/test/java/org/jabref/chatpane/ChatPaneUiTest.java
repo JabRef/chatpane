@@ -23,11 +23,8 @@ import jfx.incubator.scene.control.richtext.SelectionSegment;
 import jfx.incubator.scene.control.richtext.TextPos;
 import jfx.incubator.scene.control.richtext.model.StyledTextModel;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
 import org.jabref.chatpane.skin.ChatPaneSkin;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
@@ -36,13 +33,12 @@ import static org.jabref.chatpane.FxThread.onFx;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Switching the layout re-renders the same messages in the new shape. Needs the toolkit and a
-/// window (cells exist only once laid out): `gradlew uiTest` on a desktop, `just uitest` headless.
+/// shown stage (cells exist only once laid out), headless like every UI test (MADR 0008).
 // [utest->dsn~chat-pane-control~5]
 // [utest->dsn~chat-pane-skin~7]
 // [utest->dsn~message-cell-bubbles~3]
 // [utest->dsn~transcript-view~5]
-@Tag("ui")
-@TestFxApplication(ChatPaneUiTest.TestApp.class)
+@FxTestApplication(ChatPaneUiTest.TestApp.class)
 class ChatPaneUiTest {
 
     private static ChatPane pane;

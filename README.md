@@ -138,8 +138,7 @@ The demo is itself a named module and runs on the module path, logging through t
 Java 25 is fetched by the Gradle toolchain if missing.
 
 ```
-gradlew build traceRequirements   # compile, unit tests, requirement tracing
-gradlew uiTest                    # TestFX UI tests, need a display (just uitest: Xvfb on Linux)
+gradlew build traceRequirements   # compile, unit and UI tests (headless, no display needed), requirement tracing
 ```
 
 ## Documentation

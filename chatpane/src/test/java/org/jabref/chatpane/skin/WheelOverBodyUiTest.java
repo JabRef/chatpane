@@ -13,13 +13,11 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FxTestApplication;
 import org.jabref.chatpane.MessageLayout;
 
 import static org.jabref.chatpane.ChatMessage.Direction.INCOMING;
@@ -31,8 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// not (their inner ScrollPane consumed every wheel event; W2 in docs/workarounds.md, removed): this test
 /// passes without any filter since the bodies are content-high RichTextAreas.
 // [utest->dsn~bubble-view~2]
-@Tag("ui")
-@TestFxApplication(WheelOverBodyUiTest.TestApp.class)
+@FxTestApplication(WheelOverBodyUiTest.TestApp.class)
 class WheelOverBodyUiTest {
 
     private static ChatPane pane;

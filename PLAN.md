@@ -9,6 +9,12 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-10-05* — **Headless UI tests in `build`, TestFX gone (MADR 0008 revised in place).**
+Carl: "JabRef recently switched to headless ui tests. is this possible for chatpane too?", then "all in", and "replace MADR 0008 in place".
+After JabRef PR 16850: JavaFX's own headless platform (`glass.platform=Headless`, `prism.order=sw`); `FxTestApplication` + `FxTestExtension` replace TestFX's `@TestFxApplication` — toolkit once per JVM, a fresh `Stage` per class, an exception on the FX thread fails the test (checked with a throwaway test).
+`uiTest`, `@Tag("ui")`, `just uitest`, CI's Xvfb `ui-test` job and the TestFX dependency (EUPL-1.2) are gone; `build` runs all 22 UI tests in about 7 s.
+None of our tests used TestFX's robot, so they changed only in their annotation.
+
 *2026-09-23* — **Maven Central publishing, SemVer proposed (MADR 0012, supersedes 0003).**
 Oliver: "Port the maven central publishing flow from JabRef/html-to-node"; then "switch to semver — and start with 0.1.0 — the -SNAPSHOTs are nice, no nightly thing".
 vanniktech `maven-publish` on `:chatpane` as `org.jabref:chatpane`; `publish.yml` pushes `0.1.0-SNAPSHOT` from `main` (PRs: `0.1.0-PR<n>-SNAPSHOT`), `release.yml` releases a `vX.Y.Z` tag. Changelog: the CalVer day sections, never tagged, are one `[Unreleased]` section now.

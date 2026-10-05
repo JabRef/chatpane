@@ -13,7 +13,7 @@ New records: copy the current MADR template, next free number, `NNNN-short-title
 | [0005](0005-slf4j-api-with-tinylog-backend.md) | SLF4J API, tinylog as the backend | accepted |
 | [0006](0006-jspecify-nullness.md) | JSpecify for nullness | accepted |
 | [0007](0007-standard-modena-lookups-and-css-hooks.md) | No palette of its own: standard Modena lookups and CSS hooks | accepted |
-| [0008](0008-ui-tests-via-testfx.md) | UI tests via TestFX, outside `build` | accepted |
+| [0008](0008-headless-ui-tests-in-build.md) | Headless UI tests in `build` (revised 2026-10-05, was: TestFX outside `build`) | accepted |
 | [0009](0009-standard-javafx-control-architecture.md) | Standard JavaFX control architecture: Control, Skin, CSS, virtualized list | accepted |
 | [0010](0010-richtextarea-transcript-for-irc-and-modern.md) | IRC and modern layouts as one RichTextArea transcript (incubator) | accepted |
 | [0011](0011-message-renderer-hook-with-commonmark.md) | Message bodies through a renderer hook; Markdown with commonmark-java | accepted |

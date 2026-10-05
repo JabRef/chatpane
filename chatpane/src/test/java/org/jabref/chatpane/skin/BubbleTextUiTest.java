@@ -19,13 +19,11 @@ import javafx.scene.shape.Path;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import io.gitlab.fxlabs.testfx.junit.jupiter.TestFxApplication;
-
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.jabref.chatpane.ChatMessage;
 import org.jabref.chatpane.ChatPane;
+import org.jabref.chatpane.FxTestApplication;
 import org.jabref.chatpane.MessageLayout;
 import org.jabref.chatpane.MessageRenderer;
 
@@ -40,8 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// clickable. Order of the three messages: short incoming, long incoming, outgoing.
 // [utest->dsn~bubble-text~1]
 // [utest->dsn~message-links~1]
-@Tag("ui")
-@TestFxApplication(BubbleTextUiTest.TestApp.class)
+@FxTestApplication(BubbleTextUiTest.TestApp.class)
 class BubbleTextUiTest {
 
     private static final Instant T0 = Instant.parse("2026-09-22T10:00:00Z");
