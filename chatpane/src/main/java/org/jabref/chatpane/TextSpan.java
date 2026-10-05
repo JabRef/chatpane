@@ -3,6 +3,7 @@ package org.jabref.chatpane;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 
@@ -11,7 +12,11 @@ import org.jspecify.annotations.Nullable;
 /// @param text   the characters, never containing a line break
 /// @param styles inline styles; each becomes a CSS style name `span-<name>` on the rendered text
 /// @param link   the target if the span is a link, handed to [ChatPane#linkHandlerProperty()] on click
-public record TextSpan(String text, Set<Style> styles, @Nullable String link) {
+/// @param token  what the span is in a highlighted code block ([CodeToken#type()]); it becomes a CSS
+///               style name `token-<token>` on the rendered text. `null` outside highlighted code.
+public record TextSpan(String text, Set<Style> styles, @Nullable String link, @Nullable String token) {
+
+    private static final Pattern CSS_NAME = Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*");
 
     /// Inline styles a renderer can ask for.
     public enum Style {
@@ -26,6 +31,19 @@ public record TextSpan(String text, Set<Style> styles, @Nullable String link) {
     public TextSpan {
         Objects.requireNonNull(text, "text");
         styles = Set.copyOf(styles);
+        if (token != null && !isCssName(token)) {
+            throw new IllegalArgumentException("not a CSS name (lower-case letters, digits, '-'): " + token);
+        }
+    }
+
+    /// A span outside highlighted code.
+    public TextSpan(String text, Set<Style> styles, @Nullable String link) {
+        this(text, styles, link, null);
+    }
+
+    /// Lower-case letters and digits, in words joined by `-`.
+    static boolean isCssName(String name) {
+        return CSS_NAME.matcher(name).matches();
     }
 
     /// A span without style or link.

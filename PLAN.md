@@ -9,6 +9,13 @@
 
 ## Current state (M0 done, M1 in progress)
 
+*2026-10-05* — **Code highlighting hook.**
+Carl: from the review of JabRef's open `component: ai` PRs — PR 17181 highlights JSON answers — "now the code block highlighting hook".
+Public `CodeHighlighter` (language, code → `CodeToken`s with a CSS-name type) and `MessageRenderer.markdown(highlighter)`; a token becomes `TextSpan.token` and the style name `token-<type>`. No highlighter and no token colors in the library (MADR 0007); a highlighter that throws or loses text leaves the block plain, with a warning. `lineCount` renders without it.
+Not taken over from 17181: turning bare JSON into a fenced block and pretty-printing it — AI-specific, JabRef's (a `MessageRenderer` wrapping `markdown(…)` does it).
+Demo: `JsonHighlighter` (a regex lexer, own tests in `:demo`), colors in `demo.css`/`dark.css`, a JSON sample.
+Tests: `CodeHighlightingTest`, `CodeHighlightingUiTest` (a token color from an application stylesheet in every layout), `JsonHighlighterTest`.
+
 *2026-09-23* — **Maven Central publishing, SemVer proposed (MADR 0012, supersedes 0003).**
 Oliver: "Port the maven central publishing flow from JabRef/html-to-node"; then "switch to semver — and start with 0.1.0 — the -SNAPSHOTs are nice, no nightly thing".
 vanniktech `maven-publish` on `:chatpane` as `org.jabref:chatpane`; `publish.yml` pushes `0.1.0-SNAPSHOT` from `main` (PRs: `0.1.0-PR<n>-SNAPSHOT`), `release.yml` releases a `vX.Y.Z` tag. Changelog: the CalVer day sections, never tagged, are one `[Unreleased]` section now.

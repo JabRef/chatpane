@@ -34,7 +34,11 @@ import org.commonmark.node.Text;
 import org.commonmark.node.ThematicBreak;
 import org.commonmark.parser.Parser;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.jabref.chatpane.CodeHighlighter;
+import org.jabref.chatpane.CodeToken;
 import org.jabref.chatpane.MessageRenderer;
 import org.jabref.chatpane.TextLine;
 import org.jabref.chatpane.TextLine.Kind;
@@ -48,10 +52,14 @@ import org.jabref.chatpane.TextSpan.Style;
 /// `Text` nodes: headings, emphasis, inline and block code, links, `•` bullets and numbered lists
 /// with nesting, block quotes, HTML as literal text, a little space between blocks. Unlike
 /// CommonMark (and like chat clients), a single line break stays a line break.
-// [impl->dsn~message-renderers~1]
+///
+/// With a [CodeHighlighter], code blocks are split into its tokens ([#highlight]).
+// [impl->dsn~message-renderers~2]
 public final class MarkdownRenderer implements MessageRenderer {
 
-    public static final MarkdownRenderer INSTANCE = new MarkdownRenderer();
+    public static final MarkdownRenderer INSTANCE = new MarkdownRenderer(null);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MarkdownRenderer.class);
 
     private static final String BULLET = "• ";
     private static final String RULE = "―".repeat(12);
@@ -59,14 +67,62 @@ public final class MarkdownRenderer implements MessageRenderer {
     /// Thread-safe, per commonmark-java.
     private final Parser parser = Parser.builder().extensions(List.of(StrikethroughExtension.create())).build();
 
-    private MarkdownRenderer() {
+    private final @Nullable CodeHighlighter highlighter;
+
+    public MarkdownRenderer(@Nullable CodeHighlighter highlighter) {
+        this.highlighter = highlighter;
     }
 
     @Override
     public List<TextLine> render(String text) {
-        Lines lines = new Lines();
+        Lines lines = new Lines(highlighter);
         parser.parse(text).accept(lines);
         return lines.finish();
+    }
+
+    /// Highlighting splits code into tokens, never into other lines: count without it.
+    @Override
+    public int lineCount(String text) {
+        return highlighter == null ? render(text).size() : INSTANCE.lineCount(text);
+    }
+
+    /// The tokens of `code`, line by line, or `null` to show it unhighlighted: without a
+    /// highlighter, or when it throws or its tokens do not add up to the code — a broken
+    /// highlighter must not lose a message's text.
+    // [impl->dsn~code-highlighting~1]
+    static @Nullable List<List<CodeToken>> highlight(@Nullable CodeHighlighter highlighter, String language, String code) {
+        if (highlighter == null) {
+            return null;
+        }
+        List<CodeToken> tokens;
+        try {
+            tokens = highlighter.highlight(language, code);
+        } catch (RuntimeException e) {
+            LOGGER.warn("Code highlighter failed on a '{}' block, showing it unhighlighted", language, e);
+            return null;
+        }
+        StringBuilder joined = new StringBuilder(code.length());
+        tokens.forEach(token -> joined.append(token.text()));
+        if (!joined.toString().equals(code)) {
+            LOGGER.warn("Code highlighter tokens do not add up to the '{}' block, showing it unhighlighted", language);
+            return null;
+        }
+        List<List<CodeToken>> lines = new ArrayList<>();
+        List<CodeToken> line = new ArrayList<>();
+        for (CodeToken token : tokens) {
+            String[] parts = token.text().split("\n", -1);
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) {
+                    lines.add(line);
+                    line = new ArrayList<>();
+                }
+                if (!parts[i].isEmpty()) {
+                    line.add(new CodeToken(parts[i], token.type()));
+                }
+            }
+        }
+        lines.add(line);
+        return lines;
     }
 
     /// Walks the syntax tree and collects lines; one instance per render.
@@ -75,6 +131,7 @@ public final class MarkdownRenderer implements MessageRenderer {
         /// A list being walked: `-1` for bullets, else the next number.
         private static final int BULLETS = -1;
 
+        private final @Nullable CodeHighlighter highlighter;
         private final List<TextLine> lines = new ArrayList<>();
         private final Map<Style, Integer> styles = new EnumMap<>(Style.class);
         private final Deque<Integer> lists = new ArrayDeque<>();
@@ -89,6 +146,10 @@ public final class MarkdownRenderer implements MessageRenderer {
         private Kind kind = Kind.PARAGRAPH;
         private int level;
         private boolean startsBlock;
+
+        Lines(@Nullable CodeHighlighter highlighter) {
+            this.highlighter = highlighter;
+        }
 
         List<TextLine> finish() {
             endLine();
@@ -117,20 +178,28 @@ public final class MarkdownRenderer implements MessageRenderer {
 
         @Override
         public void visit(FencedCodeBlock code) {
-            codeLines(code.getLiteral());
+            String info = code.getInfo() == null ? "" : code.getInfo().strip();
+            codeLines(info.split("\\s+", 2)[0], code.getLiteral());
         }
 
         @Override
         public void visit(IndentedCodeBlock code) {
-            codeLines(code.getLiteral());
+            codeLines("", code.getLiteral());
         }
 
-        private void codeLines(String literal) {
+        private void codeLines(String language, String literal) {
             blockPending = true;
             String body = literal.endsWith("\n") ? literal.substring(0, literal.length() - 1) : literal;
-            for (String line : body.split("\n", -1)) {
+            List<List<CodeToken>> highlighted = highlight(highlighter, language, body);
+            if (highlighted == null) {
+                highlighted = new ArrayList<>();
+                for (String line : body.split("\n", -1)) {
+                    highlighted.add(List.of(CodeToken.plain(line)));
+                }
+            }
+            for (List<CodeToken> line : highlighted) {
                 startLine(Kind.CODE_BLOCK, 0);
-                styled(Style.CODE, () -> add(line));
+                styled(Style.CODE, () -> line.forEach(token -> add(token.text(), token.type())));
                 endLine();
             }
         }
@@ -295,13 +364,17 @@ public final class MarkdownRenderer implements MessageRenderer {
         }
 
         private void add(String text) {
+            add(text, null);
+        }
+
+        private void add(String text, @Nullable String token) {
             if (text.isEmpty()) {
                 return;
             }
             if (spans == null) {
                 startLine(contextKind(), contextLevel());
             }
-            spans.add(new TextSpan(text, Set.copyOf(styles.keySet()), link));
+            spans.add(new TextSpan(text, Set.copyOf(styles.keySet()), link, token));
         }
 
         private void styled(Style style, Runnable inside) {

@@ -7,7 +7,7 @@ import org.jabref.chatpane.MessageRenderer;
 import org.jabref.chatpane.TextLine;
 
 /// [MessageRenderer#plainText()]: one plain line per line of the text.
-// [impl->dsn~message-renderers~1]
+// [impl->dsn~message-renderers~2]
 public final class PlainTextRenderer implements MessageRenderer {
 
     public static final PlainTextRenderer INSTANCE = new PlainTextRenderer();

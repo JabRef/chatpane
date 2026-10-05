@@ -58,6 +58,17 @@ Covers:
 
 Needs: dsn
 
+### Highlighted code
+`req~code-highlighting~1`
+
+The application can have the code blocks of Markdown messages syntax-highlighted by its own highlighter, for the languages its messages contain, and colors the tokens from its own stylesheet; the pane brings no highlighter and no token colors.
+A highlighter that fails never costs the message its text: the block is then shown as plain code.
+
+Covers:
+- feat~rich-message-text~1
+
+Needs: dsn
+
 ### Message actions
 `req~message-actions~1`
 
@@ -184,15 +195,30 @@ Covers:
 Needs: impl, utest
 
 ### Message renderers
-`dsn~message-renderers~1`
+`dsn~message-renderers~2`
 
-`MessageRenderer` (public, functional) turns a text into `TextLine`s — a `Kind` (`PARAGRAPH`, `HEADING`, `QUOTE`, `LIST_ITEM`, `CODE_BLOCK`), a level (heading level, nesting depth), whether it starts a block, and `TextSpan`s (text, `Style`s `BOLD`/`ITALIC`/`CODE`/`STRIKETHROUGH`, an optional link target); `lineCount` defaults to `render(text).size()`.
+`MessageRenderer` (public, functional) turns a text into `TextLine`s — a `Kind` (`PARAGRAPH`, `HEADING`, `QUOTE`, `LIST_ITEM`, `CODE_BLOCK`), a level (heading level, nesting depth), whether it starts a block, and `TextSpan`s (text, `Style`s `BOLD`/`ITALIC`/`CODE`/`STRIKETHROUGH`, an optional link target, an optional code token type — a three-part constructor leaves it out); `lineCount` defaults to `render(text).size()`.
 `plainText()` is one plain line per line of the text, with a counting `lineCount`.
 `markdown()` is commonmark-java with the GFM strikethrough extension (MADR 0011), walked by a visitor after JabRef's `MarkdownTextFlow`: `•` bullets and numbered markers as the first span of an item, nesting as the level, fenced and indented code as `CODE_BLOCK` lines, HTML as literal text, images as `[alt]` linked to their source; a single line break stays a line break.
+`markdown(highlighter)` is the same with highlighted code (`dsn~code-highlighting~1`).
 Both views render through a `RenderContext` that reads the pane's time formatter, renderer and link handler fresh each time.
 
 Covers:
 - req~rich-text~1
+
+Needs: impl, utest
+
+### Code highlighting
+`dsn~code-highlighting~1`
+
+`CodeHighlighter` (public, functional) turns a code block — the first word of the fence's info string as language (empty for none and for an indented block), and the code without its final line break — into `CodeToken`s: text (line breaks allowed) and an optional type, a CSS name (`[a-z0-9]+(-[a-z0-9]+)*`, checked like a span's token).
+`MessageRenderer.markdown(highlighter)` is a `MarkdownRenderer` holding it: a code block's tokens are split at line breaks into `CODE_BLOCK` lines, each token a `CODE` span carrying its type, which the formats (`TranscriptSegments`) and the bubble's measuring texts (`dsn~bubble-text~1`) turn into the style name `token-<type>`.
+If the highlighter throws or its tokens do not add up to the code, the renderer logs a warning and shows the block unhighlighted.
+`lineCount` renders without the highlighter: tokens never change the lines, and the transcript counts every message.
+The library has no highlighter and `chatpane.css` no `token-` rule (MADR 0007).
+
+Covers:
+- req~code-highlighting~1
 
 Needs: impl, utest
 
@@ -313,7 +339,7 @@ Needs: impl, utest
 ### Transcript view
 `dsn~transcript-view~5`
 
-`TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~4`); the model is the area's own, no second reference is kept.
+`TranscriptView` shows one read-only `RichTextArea` (style class `chat-pane-transcript`, incubator module `jfx.incubator.richtext`, MADR 0010) over a `TranscriptModel`, filled by its `TranscriptFormat` (`dsn~transcript-paragraphs~5`); the model is the area's own, no second reference is kept.
 `show`/`replaced` set a new model, `appended` appends to it, `updated` updates one message in it (a new model only if that update changes the next message's grouping), `hide` sets `null`; the context menu is `MessageMenu` (`dsn~message-actions~2`).
 Selection, the standard context menu and *Copy* are the area's own; copying exports plain text among the model's formats; links work through `LinkInteraction` (`dsn~message-links~1`).
 Read-only, wrapping, the hidden caret and no current-paragraph highlight are set in code — in `chatpane.css` a CSS pass that sets them again breaks the area (Workaround W6); the content padding stays in CSS.
@@ -340,13 +366,13 @@ Covers:
 Needs: impl, utest
 
 ### Transcript formats
-`dsn~transcript-paragraphs~4`
+`dsn~transcript-paragraphs~5`
 
 A `TranscriptFormat` turns one message into built paragraphs (`TranscriptLine`: the `RichParagraph` and its links), and says how many it would build (`paragraphCount`) without building them — the transcript model counts every message but builds only the visible ones (`dsn~transcript-model~4`); the count is the renderer's `lineCount` (plus the header).
 Three implementations, over the rendered `TextLine`s of the `RenderContext`: `IrcTranscript`, `ModernTranscript`, and `BodyFormat` (the lines alone — the body of a bubble and of a modern entry).
 `IrcTranscript`: the first rendered line of a message prefixed `time <sender> `, every further line a paragraph of its own.
 `ModernTranscript`: a header paragraph `sender  time` for a message that starts a group, then the `BodyFormat` paragraphs.
-Shared building blocks are in `TranscriptSegments`: a paragraph that starts a group has 6 px space above it, one that starts a block within a message 3 px, a nested list item or quote 16 px of indentation per level (the model's unit is pixels); segments carry only CSS style names — `message-time`, `message-sender`, `message-text`, `incoming` or `outgoing`, `continued` for a message that continues its group (the states a bubble cell has as pseudo-classes), and for rendered text `line-<kind>` (plus `line-heading-<level>`) and `span-<style>` (plus `span-link`) — so colors stay in CSS (MADR 0007).
+Shared building blocks are in `TranscriptSegments`: a paragraph that starts a group has 6 px space above it, one that starts a block within a message 3 px, a nested list item or quote 16 px of indentation per level (the model's unit is pixels); segments carry only CSS style names — `message-time`, `message-sender`, `message-text`, `incoming` or `outgoing`, `continued` for a message that continues its group (the states a bubble cell has as pseudo-classes), and for rendered text `line-<kind>` (plus `line-heading-<level>`) and `span-<style>` (plus `span-link`), in highlighted code `token-<type>` — so colors stay in CSS (MADR 0007).
 
 Covers:
 - req~choose-message-layout~1

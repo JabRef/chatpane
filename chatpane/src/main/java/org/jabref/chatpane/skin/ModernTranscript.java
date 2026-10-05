@@ -13,7 +13,7 @@ import static org.jabref.chatpane.skin.TranscriptSegments.paragraphFor;
 
 /// [org.jabref.chatpane.MessageLayout#MODERN]: a header `sender  time` above each group,
 /// then the rendered lines of the message, one paragraph each ([BodyFormat]).
-// [impl->dsn~transcript-paragraphs~4]
+// [impl->dsn~transcript-paragraphs~5]
 final class ModernTranscript implements TranscriptFormat {
 
     private final RenderContext context;

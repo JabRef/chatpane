@@ -11,7 +11,7 @@ import org.jabref.chatpane.TextSpan.Style;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-// [utest->dsn~message-renderers~1]
+// [utest->dsn~message-renderers~2]
 class MessageRendererTest {
 
     private static final MessageRenderer PLAIN = MessageRenderer.plainText();

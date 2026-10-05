@@ -13,7 +13,7 @@ import static org.jabref.chatpane.skin.TranscriptSegments.paragraphFor;
 
 /// The rendered lines of a message and nothing else: the body of a bubble ([BubbleText]) and of a
 /// modern entry ([ModernTranscript]) — one format for both, so a message reads the same in either.
-// [impl->dsn~transcript-paragraphs~4]
+// [impl->dsn~transcript-paragraphs~5]
 final class BodyFormat implements TranscriptFormat {
 
     private final RenderContext context;

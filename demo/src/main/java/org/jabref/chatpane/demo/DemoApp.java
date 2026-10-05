@@ -3,6 +3,7 @@ package org.jabref.chatpane.demo;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -47,7 +48,7 @@ public class DemoApp extends Application {
 
     /// How the demo renders message texts ([ChatPane#messageRendererProperty()]).
     enum TextFormat {
-        PLAIN(MessageRenderer.plainText()), MARKDOWN(MessageRenderer.markdown());
+        PLAIN(MessageRenderer.plainText()), MARKDOWN(MessageRenderer.markdown(new JsonHighlighter()));
 
         private final MessageRenderer renderer;
 
@@ -75,6 +76,8 @@ public class DemoApp extends Application {
 
         BorderPane root = new BorderPane(chat);
         Scene scene = new Scene(root, 760, 640);
+        // The demo's own token colors for highlighted code; dark.css overrides them.
+        scene.getStylesheets().add(Objects.requireNonNull(DemoApp.class.getResource("demo.css"), "demo.css").toExternalForm());
         DemoTheme.install(scene);
         theme.applyTo(scene);
 
@@ -172,6 +175,16 @@ public class DemoApp extends Application {
                 new ChatMessage("alice", "IRC, *obviously*. And **Markdown** now works in every layout:\n"
                         + "- `code`, ~~strike~~ and [links](https://github.com/calixtus/chatpane)\n"
                         + "- lists\n  1. nested\n  2. numbered\n\n> a quote", start.plusSeconds(460), INCOMING),
+                new ChatMessage("bob", """
+                        And code blocks are highlighted, here as JSON:
+                        ```json
+                        {
+                          "layout": "bubbles",
+                          "width": 0.7,
+                          "markdown": true,
+                          "theme": null
+                        }
+                        ```""", start.plusSeconds(520), INCOMING),
                 new ChatMessage(LOCAL_USER, "Noted.", start.plusSeconds(2400), OUTGOING),
                 new ChatMessage(LOCAL_USER, "Consecutive messages within five minutes share one header.", start.plusSeconds(2410), OUTGOING));
     }

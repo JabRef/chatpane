@@ -26,9 +26,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Demo: a pretend assistant** answers each message the way an AI chat does, with *Delete* and *Retry*.
 - **Localizable texts**: `ChatPane.setTextLocalizer(…)` translates the pane's own texts (the context menu's *Copy* and *Select All*); JabRef can pass `Localization::lang`.
 - **Time format as a pane property**: `ChatPane.timeFormatterProperty()` sets how times read, in every layout alike.
+- **Syntax highlighting hook for code blocks**: `MessageRenderer.markdown(CodeHighlighter)` hands each code block with its language to the application's highlighter and styles its tokens as `token-<type>`; colors come from the application's stylesheet. The demo highlights JSON.
 
 ### Changed
 
+- **`TextSpan` has a fourth component**, `token` (the code token type); the three-part constructor still works.
 - **`ChatMessage` takes a `Direction`** (`INCOMING`, `OUTGOING`) instead of a `boolean outgoing`; `MessageLayout.pseudoClassName()` is now `cssName()`, like `Direction.cssName()`.
 
 ### Fixed
